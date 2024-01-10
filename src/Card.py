@@ -12,14 +12,16 @@ class Card:
     #Value getter
     def value_getter(self):
         return self._value 
-
+    
     #Suit setter
     def suit_setter(self, suit):
         self._suit = suit
     
     #Value setter
-    def value_getter(self, value):
+    def value_setter(self, value):
         self._value = value
         
     
-        
+
+if __name__ == '__main__':
+    card = Card("A", 12)
