@@ -53,15 +53,62 @@ class Jogo:
         i = 0
         while(i < 70):
             print("=")
-            i = i + 1
+            i += 1
         print("\n")
     
     def poker_sequences(self, player_cards):
         
         cards = self._table_cards + player_cards
         cards = sorted(cards, key=lambda card: card.value_getter())
+
+        hearts, spades, diamonds, clubs = [0], [0], [0], [0]
+        for card in cards:
+            if card.suit_getter() == "♡":
+                hearts.append(card)
+                hearts[0] += card.value_getter()
+            elif card.suit_getter() == "♠":
+                spades.append(card)
+                spades[0] += card.value_getter()
+            elif card.suit_getter == "♢":
+                diamonds.append(card)
+                diamonds[0] += card.value_getter()
+            else:
+                clubs.append(card)
+                clubs[0] += card.value_getter()
         
-        #Royal Flush
+        
+        sequences_weights = {
+            "Royal Flush": 10,
+            "Straight Flush": 9,
+            "Quadra": 8,
+            "Full House": 7,
+            "Flush": 6,
+            "Straight": 5,
+            "Trinca": 4,
+            "Dois Pares": 3,
+            "Par": 2,
+            "Carta mais alta": 1
+        }
+        
+
+        if len(hearts) == 5 or len(spades) == 5 or len(diamonds) == 5 or len(clubs) == 5:
+            if hearts[0] == 60 or spades[0] == 60 or diamonds == 60 or clubs == 60:
+                return sequences_weights["Royal Flush"]
+            else:
+                sf_possibilites = [20,25,30,35,40,45,50,55]
+                for number in sf_possibilites:
+                    if hearts[0] == number or spades[0] == number or diamonds[0] == number or clubs[0] == number:
+                        return sequences_weights["Straight Flush"]
+                
+                return sequences_weights["Flush"]
+        
+        
+
+            
+
+
+
+
         
                     
     
