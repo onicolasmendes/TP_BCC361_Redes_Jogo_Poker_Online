@@ -1,7 +1,7 @@
 from Deck import Deck
 from Card import Card
 from Jogador import Jogador
-from Funcoes_auxiliares import verify_straight_flush, generate_combinations, generate_all_combinations, verify_royal_flush, big_straight_flush
+from Funcoes_auxiliares import separate_cards_by_suit, separate_cards_by_number, verify_straight_flush, generate_combinations, generate_all_combinations, verify_royal_flush, big_flush, verify_four
 import time
 
 class Jogo:
@@ -54,17 +54,12 @@ class Jogo:
         
         hearts, spades, diamonds, clubs = [], [], [], []
         
-        for card in cards:
-            if card.suit_getter() == "♡":
-                hearts.append(card.value_getter())
-            elif card.suit_getter() == "♠":
-                spades.append(card.value_getter())
-            elif card.suit_getter == "♢":
-                diamonds.append(card.value_getter())
-            else:
-                clubs.append(card.value_getter())
+        separate_cards_by_suit(hearts, spades, diamonds, clubs, cards)
         
+        two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen = [], [], [], [], [], [], [], [], [], [], [], [], []
         
+        separate_cards_by_number(two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen, cards)
+                
         sequences_weights = {
             "Royal Flush": 10,
             "Straight Flush": 9,
@@ -78,7 +73,6 @@ class Jogo:
             "Carta mais alta": 1
         }
         
-
         if len(hearts) >= 5 or len(spades) >= 5 or len(diamonds) >= 5 or len(clubs) >= 5:
             
             total_sequences = generate_all_combinations(hearts, spades, diamonds, clubs, 5)
@@ -97,14 +91,22 @@ class Jogo:
                     potentials_straight_flush.append(sequence)
             
             sequence_value = 0  
-            sequence_value = big_straight_flush(potentials_straight_flush)          
+            sequence_value = big_flush(potentials_straight_flush)          
             if(sequence_value != 0):
                 return sequences_weights["Straight Flush"] * sequence_value
                 
             #Flush
-            return sequences_weights["Flush"]    
-        
-        
+            sequence_value = big_flush(total_sequences)
+            return sequences_weights["Flush"] * sequence_value 
+        elif len(two) == 4 or len(three) == 4 or len(four) == 4 or len(five) == 4 or len(six) == 4 or len(seven) == 4 or len(eight) == 4 or len(nine) == 4 or len(ten) == 4 or len(eleven) == 4 or len(twelve) == 4 or len(thirteen) == 4 or len(fourteen) == 4:
+            #Four
+            sequence_value = 0
+            
+            sequence_value = verify_four(two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen)
+            
+            if sequence_value != 0:
+                return sequences_weights["Quadra"] * sequence_value
+            
     def run(self):
         
         self.menu()
