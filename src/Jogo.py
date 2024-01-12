@@ -1,5 +1,7 @@
 from Deck import Deck
+from Card import Card
 from Jogador import Jogador
+from Funcoes_auxiliares import verify_straight_flush, generate_combinations, generate_all_combinations, verify_royal_flush, big_straight_flush
 import time
 
 class Jogo:
@@ -10,19 +12,6 @@ class Jogo:
         self._total = 0
         self._table_cards = []
         self._check_bets = True
-
-    def player_menu():
-        print("Ação:")
-        print("1 - Aumentar a aposta")
-        print("2 - Call")
-        print("3 - Fold")
-        print("4 - Check")
-        print("5 - AllIn")
-    
-    def menu():
-        print("Poker Texas Hold'em")
-        print("1 - Iniciar")
-        print("2 - Sair")
         
     def print_table(self):
         print("Cartas na mesa:\n")
@@ -55,26 +44,25 @@ class Jogo:
             print("=")
             i += 1
         print("\n")
+        
+    
+    
     
     def poker_sequences(self, player_cards):
         
         cards = self._table_cards + player_cards
-        cards = sorted(cards, key=lambda card: card.value_getter())
-
-        hearts, spades, diamonds, clubs = [0], [0], [0], [0]
+        
+        hearts, spades, diamonds, clubs = [], [], [], []
+        
         for card in cards:
             if card.suit_getter() == "♡":
-                hearts.append(card)
-                hearts[0] += card.value_getter()
+                hearts.append(card.value_getter())
             elif card.suit_getter() == "♠":
-                spades.append(card)
-                spades[0] += card.value_getter()
+                spades.append(card.value_getter())
             elif card.suit_getter == "♢":
-                diamonds.append(card)
-                diamonds[0] += card.value_getter()
+                diamonds.append(card.value_getter())
             else:
-                clubs.append(card)
-                clubs[0] += card.value_getter()
+                clubs.append(card.value_getter())
         
         
         sequences_weights = {
@@ -91,33 +79,38 @@ class Jogo:
         }
         
 
-        if len(hearts) == 5 or len(spades) == 5 or len(diamonds) == 5 or len(clubs) == 5:
-            if hearts[0] == 60 or spades[0] == 60 or diamonds == 60 or clubs == 60:
-                return sequences_weights["Royal Flush"]
-            else:
-                sf_possibilites = [20,25,30,35,40,45,50,55]
-                for number in sf_possibilites:
-                    if hearts[0] == number or spades[0] == number or diamonds[0] == number or clubs[0] == number:
-                        return sequences_weights["Straight Flush"]
-                
-                return sequences_weights["Flush"]
-        
-        
-
+        if len(hearts) >= 5 or len(spades) >= 5 or len(diamonds) >= 5 or len(clubs) >= 5:
             
-
-
-
-
+            total_sequences = generate_all_combinations(hearts, spades, diamonds, clubs, 5)
+            
+            #Royal Flush
+            for sequence in total_sequences:
+                sequence.sort()
+                if verify_royal_flush(sequence):
+                    return sequences_weights["Royal Flush"]
+                
+            #Straight Flush
+            potentials_straight_flush = []
+            
+            for sequence in total_sequences:
+                if verify_straight_flush(sequence):
+                    potentials_straight_flush.append(sequence)
+            
+            sequence_value = 0  
+            sequence_value = big_straight_flush(potentials_straight_flush)          
+            if(sequence_value != 0):
+                return sequences_weights["Straight Flush"] * sequence_value
+                
+            #Flush
+            return sequences_weights["Flush"]    
         
-                    
-    
+        
     def run(self):
         
         self.menu()
         menu_choice = int(input("Opção: "))
 
-        if menu_choice is 1:
+        if menu_choice == 1:
             self.print_line()
             initial_chips = int(input(print("Digite a quantidade inicial de fichas que todos os jogadores receberao: ")))
             qtd_players = int(input(print("Digite a quantidade de jogadores: ")))
@@ -126,10 +119,57 @@ class Jogo:
             self.distribute_cards()
             time.sleep(1)
             
+
             
             
+if __name__ == '__main__':
+    cards=[]
+    cards.append(Card("Hearts", 10))
+    cards.append(Card("Hearts", 11))
+    cards.append(Card("Hearts", 12))
+    cards.append(Card("Hearts", 13))
+    cards.append(Card("Hearts", 14))
+    cards.append(Card("Spades", 5))
+    cards.append(Card("Spades", 8))
+    cards.append(Card("Spades", 12))
+    cards.append(Card("Spades", 11))
+    cards.append(Card("Spades", 4))
+    
+ 
+        
+    
+    hearts, spades, diamonds, clubs = [], [], [], []
+    
+    for card in cards:
+        if card.suit_getter() == "Hearts":
+            hearts.append(card.value_getter())
+        elif card.suit_getter() == "Spades":
+            spades.append(card.value_getter())
+        elif card.suit_getter == "Diamonds":
+            diamonds.append(card.value_getter())
+        else:
+            clubs.append(card.value_getter())
+    
+    print(hearts)
+    print(spades)
+    print(diamonds)
+    print(clubs)
+    
+    hearts_cards = generate_combinations(hearts,5)
+    spades_cards = generate_combinations(spades,5)
+    diamonds_cards = generate_combinations(diamonds,5)
+    clubs_cards = generate_combinations(clubs,5)
             
+    total_sequences = hearts_cards + spades_cards +  diamonds_cards + clubs_cards
             
+    #print(total_sequences)
+    
+    royal_flush = [10, 11, 12, 13, 14]
+            
+    for sequence in total_sequences:
+        sequence.sort()
+        if sequence == royal_flush:
+            print("galooooooo")     
             
          
 
