@@ -1,4 +1,5 @@
 from itertools import combinations
+from collections import Counter
 
 def generate_combinations(cards, number):
         real_sequences = []
@@ -56,6 +57,8 @@ def separate_cards_by_suit(hearts, spades, diamonds, clubs, cards):
         else:
             clubs.append(card.value_getter())
 
+
+
 def separate_cards_by_number(two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen, cards):
     for card in cards:
         if card.value_getter() == 2:
@@ -85,6 +88,8 @@ def separate_cards_by_number(two, three, four, five, six, seven, eight, nine, te
         else:
             fourteen.append(14)  
 
+
+
 def verify_four(two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen):
     if len(fourteen) == 4:
         return 14
@@ -113,11 +118,114 @@ def verify_four(two, three, four, five, six, seven, eight, nine, ten, eleven, tw
     elif len(two) == 4:
         return 2
     else:
-        return 0      
-def big_flush(sequences):
+        return 0   
+    
+def iniciate_list_zero(sequence, number):
+    for i in range(number):
+        sequence[i] = 0
+    return sequence
+
+def counting_double_triple(sequence):
+    doubles = 0
+    triples = 0
+    
+    for i in sequence:
+        if (i == 2):
+            doubles = doubles + 1
+        elif (i == 3):
+            triples = triples + 1
+    
+    return doubles, triples
+
+def verify_full_house(doubles, triples):
+    if doubles == 1 and triples == 1:
+        return True
+    else:
+        return False
+
+def verify_straight(frequency):
+    count = 0
+    for i in frequency:
+        if (i != 0):
+            count += 1
+        else:
+            count = 0
+    
+    if count == 5:
+        return True
+    else:
+        return False
+    
+def verify_triple(triples):
+    if triples == 1:
+        return True
+    else:
+        return False
+
+def verify_two_doubles(doubles):
+    if doubles == 2:
+        return True
+    else:
+        return False
+
+def verify_double(doubles):
+    if doubles == 1:
+        return True
+    else:
+        return False
+       
+def verify_double_triple(sequence):
+    
+    frequency = []
+    
+    iniciate_list_zero(frequency, 13)
+    
+    for i in sequence:
+        if (i == 2):
+            frequency[0] += 1
+        elif (i == 3):
+            frequency[1] += 1
+        elif (i == 4):
+            frequency[2] += 1
+        elif (i == 5):
+            frequency[3] += 1
+        elif (i == 6):
+            frequency[4] += 1
+        elif (i == 7):
+            frequency[5] += 1
+        elif (i == 8):
+            frequency[6] += 1
+        elif (i == 9):
+            frequency[7] += 1
+        elif (i == 10):
+            frequency[8] += 1
+        elif (i == 11):
+            frequency[9] += 1
+        elif (i == 12):
+            frequency[10] += 1
+        elif (i == 13):
+            frequency[11] += 1
+        else:
+            frequency[12] += 1
+    
+    return frequency
+
+def big_triple_or_pair(sequences):
+    if len(sequences) == 0:
+        return 0
+    higher_value = 0
+    
+    for sequence in sequences:
+        contagem = Counter(sequence)
+        triple_value = max(contagem, key=contagem.get)
+        if(triple_value > higher_value):
+            higher_value = triple_value
+    
+    return higher_value 
+ 
+def big_sequence(sequences):
     
     bigger_value = 0
-    bigger_sequence = []
     
     if(len(sequences) == 0):
         return 0
@@ -126,8 +234,11 @@ def big_flush(sequences):
     else:
         for sequence in sequences:
             if sequence[4] > bigger_value:
-                bigger_sequence = sequence
                 bigger_value = sequence[4]
         return bigger_value
-        
-        
+
+def verify_highest_card(game_cards):
+    game_cards = sorted(game_cards, key=lambda card : card.value_getter())
+
+    return game_cards[6].value_getter()
+         

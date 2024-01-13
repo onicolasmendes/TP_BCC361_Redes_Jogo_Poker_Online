@@ -1,7 +1,7 @@
 from Deck import Deck
 from Card import Card
 from Jogador import Jogador
-from Funcoes_auxiliares import separate_cards_by_suit, separate_cards_by_number, verify_straight_flush, generate_combinations, generate_all_combinations, verify_royal_flush, big_flush, verify_four
+from Funcoes_auxiliares import separate_cards_by_suit, separate_cards_by_number, verify_straight_flush, generate_combinations, generate_all_combinations, verify_royal_flush, big_sequence, verify_four, menu, player_menu, verify_double_triple, counting_double_triple, verify_full_house, big_triple_or_pair, verify_straight, verify_triple, verify_two_doubles,  verify_double, verify_highest_card 
 import time
 
 class Jogo:
@@ -9,14 +9,18 @@ class Jogo:
         self._jogadores = []
         self._deck = Deck()
         self._current_value = 0
-        self._total = 0
+        self._total_bets = 0
         self._table_cards = []
         self._check_bets = True
         
-    def print_table(self):
-        print("Cartas na mesa:\n")
-        for card in self._table_cards:
-            print(card+"\n")
+    def set_table_cards(self):
+        for i in range(5):
+            self._table_cards.append(self._deck.pop())
+
+    def print_table_cards(self, qtd):
+        print("Cartas na mesa:")
+        for i in range(qtd):
+            self._table_cards[i]
         
     def distribute_cards(self):
         self._deck.shuffle()
@@ -91,13 +95,14 @@ class Jogo:
                     potentials_straight_flush.append(sequence)
             
             sequence_value = 0  
-            sequence_value = big_flush(potentials_straight_flush)          
+            sequence_value = big_sequence(potentials_straight_flush)          
             if(sequence_value != 0):
                 return sequences_weights["Straight Flush"] * sequence_value
                 
             #Flush
-            sequence_value = big_flush(total_sequences)
+            sequence_value = big_sequence(total_sequences)
             return sequences_weights["Flush"] * sequence_value 
+        
         elif len(two) == 4 or len(three) == 4 or len(four) == 4 or len(five) == 4 or len(six) == 4 or len(seven) == 4 or len(eight) == 4 or len(nine) == 4 or len(ten) == 4 or len(eleven) == 4 or len(twelve) == 4 or len(thirteen) == 4 or len(fourteen) == 4:
             #Four
             sequence_value = 0
@@ -106,10 +111,106 @@ class Jogo:
             
             if sequence_value != 0:
                 return sequences_weights["Quadra"] * sequence_value
+        
+        else:
+            sequences =  two + three + four + five + six + seven + eight + nine +  ten + eleven + twelve + thirteen + fourteen
+            total_sequences = generate_combinations(sequences, 5)
+            
+            #Full House
+            doubles = 0
+            triples = 0
+            frequency = []
+            potentials_full_house = []
+            
+            for sequence in total_sequences:
+                sequence.sort()
+                frequency = verify_double_triple(sequence)
+                doubles, triples = counting_double_triple(frequency)
+                
+                if verify_full_house(doubles, triples):
+                    potentials_full_house.append(sequence)
+            
+            sequence_value = 0
+            sequence_value = big_triple_or_pair(potentials_full_house)
+            
+            if sequence_value != 0:
+                return sequences_weights["Full House"] * sequence_value
+            
+            #Straight
+            frequency = []
+            potentials_straight = []
+            
+            for sequence in total_sequences:
+                frequency = verify_double_triple(sequence)
+                
+                if verify_straight(frequency):
+                    potentials_straight.append(sequence)
+            
+            sequence_value = 0
+            sequence_value = big_sequence(potentials_straight)
+
+            if sequence_value != 0:
+                return sequences_weights["Straight"] * sequence_value
+            
+            #Trinca
+            frequency = []
+            potentials_trinca = []
+            
+            for sequence in total_sequences:
+                frequency = verify_double_triple(sequence)
+                doubles, triples = counting_double_triple(frequency)
+                
+                if verify_triple(triples):
+                    potentials_trinca.append(sequence)
+            
+            sequence_value = 0
+            sequence_value = big_triple_or_pair(potentials_trinca)
+            
+            if sequence_value != 0:
+                return sequences_weights["Trinca"] * sequence_value
+            
+            #Dois pares
+            frequency = []
+            potentials_dois_pares = []
+            
+            for sequence in total_sequences:
+                frequency = verify_double_triple(sequence)
+                doubles, triples = counting_double_triple(frequency)
+                
+                if verify_two_doubles(doubles):
+                    potentials_dois_pares.append(sequence)
+            
+            sequence_value = 0
+            sequence_value = big_triple_or_pair(potentials_dois_pares)
+            
+            if sequence_value != 0:
+                return sequences_weights["Dois Pares"] * sequence_value
+            
+            #Par
+            frequency = []
+            potentials_par = []
+            
+            for sequence in total_sequences:
+                frequency = verify_double_triple(sequence)
+                doubles, triples = counting_double_triple(frequency) 
+                
+                if verify_double(doubles):
+                    potentials_par.append(sequence)
+            
+            sequence_value = 0
+            sequence_value = big_triple_or_pair(potentials_par)
+            
+            if sequence_value != 0:
+                return sequences_weights["Par"] * sequence_value
+            
+            #Carta mais alta
+            higher_card = verify_highest_card(cards)
+            return sequences_weights["Carta mais alta"] * higher_card 
+                            
             
     def run(self):
         
-        self.menu()
+        menu()
         menu_choice = int(input("Opção: "))
 
         if menu_choice == 1:
@@ -120,6 +221,28 @@ class Jogo:
             print("Embaralhando cartas...")
             self.distribute_cards()
             time.sleep(1)
+
+            show_table_cards = 3
+            while(show_table_cards < 5):
+                for jogador in self._jogadores:
+                    player_menu()
+                    
+                    playing = True
+                    while(playing):
+                        player_choice = int(input("Opção: "))
+                        
+                        if player_choice == 1:
+                            while True:
+                                
+
+
+                        
+                        
+                    
+                    
+                
+
+            
             
 
             
@@ -157,12 +280,7 @@ if __name__ == '__main__':
     print(diamonds)
     print(clubs)
     
-    hearts_cards = generate_combinations(hearts,5)
-    spades_cards = generate_combinations(spades,5)
-    diamonds_cards = generate_combinations(diamonds,5)
-    clubs_cards = generate_combinations(clubs,5)
-            
-    total_sequences = hearts_cards + spades_cards +  diamonds_cards + clubs_cards
+ 
             
     #print(total_sequences)
     
