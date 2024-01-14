@@ -20,7 +20,7 @@ class Jogo:
     def print_table_cards(self, qtd):
         print("Cartas na mesa:")
         for i in range(qtd):
-            self._table_cards[i]
+            print(f"{self._table_cards[i].suit_getter()}{self._table_cards[i].value_getter()}  ")
         
     def distribute_cards(self):
         self._deck.shuffle()
@@ -39,15 +39,8 @@ class Jogo:
     
     def initial_players(self, qtd, chips):
         for i in range(qtd):   
-            name = input(print("Digite o nome do jogador "+ qtd+":"))
+            name = input("Digite o nome do jogador: ")
             self._jogadores.append(Jogador(name, chips))
-            
-    def print_line():
-        i = 0
-        while(i < 70):
-            print("=")
-            i += 1
-        print("\n")
         
     
     
@@ -205,8 +198,67 @@ class Jogo:
             
             #Carta mais alta
             higher_card = verify_highest_card(cards)
-            return sequences_weights["Carta mais alta"] * higher_card 
-                            
+            return sequences_weights["Carta mais alta"] * higher_card
+
+
+    def bet_time(self):
+        for jogador in self._jogadores:
+            if jogador.fold_getter() == True:
+                continue
+                    
+            jogador.print_cards()
+            print(f"Fichas: {jogador.chips_getter()}         TOTAL BET: {self._total_bets}")
+            
+            while True:
+                player_menu()
+                player_choice = int(input("Opção: "))
+                        
+                if player_choice == 1:
+                    try:
+                        value = int(input("Valor: "))
+                        if jogador.raise_bet(value) == True:
+                            self._current_value = value
+                            self._total_bets += value
+                            self._check_bets = False
+                            break
+                    except:
+                        print("Valor Invalido!")
+                elif player_choice == 2:
+                    try:
+                        if jogador.call(self._current_value) == True:
+                            self._total_bets += self._current_value
+                            break
+                    except:
+                        print("Saldo Insuficiente")
+                elif player_choice == 3:
+                    jogador.fold()
+                    break
+                elif player_choice == 4:
+                    jogador.check()
+                    break
+                elif player_choice == 5:
+                    try:
+                        if jogador.all_in() == True:
+                            if jogador.chipsbet_getter() > self._current_value:
+                                self._current_value = jogador.chipsbet_getter()
+                    except:
+                        print("Fichas Zeradas!")
+
+
+    def victory_verification(self):
+        for jogador in self._jogadores:
+            if jogador.fold_getter() == True:
+                continue
+            
+            jogador.card_points_setter(self.poker_sequences(jogador.cards_getter()))
+            bigger_points = 0
+
+            if jogador.card_points_getter() > bigger_points:
+                bigger_points = jogador.card_points_getter()
+                winner = jogador
+        
+        return winner
+
             
     def run(self):
         
@@ -214,25 +266,33 @@ class Jogo:
         menu_choice = int(input("Opção: "))
 
         if menu_choice == 1:
-            self.print_line()
-            initial_chips = int(input(print("Digite a quantidade inicial de fichas que todos os jogadores receberao: ")))
-            qtd_players = int(input(print("Digite a quantidade de jogadores: ")))
+            initial_chips = int(input("Digite a quantidade inicial de fichas que todos os jogadores receberao: "))
+            qtd_players = int(input("Digite a quantidade de jogadores: "))
             self.initial_players(qtd_players, initial_chips)
             print("Embaralhando cartas...")
             self.distribute_cards()
+            self.set_table_cards()
             time.sleep(1)
 
             show_table_cards = 3
-            while(show_table_cards < 5):
-                for jogador in self._jogadores:
-                    player_menu()
+            while(show_table_cards <= 5):
+                while True:
+                    self._check_bets = True
+                    self.bet_time()
                     
-                    playing = True
-                    while(playing):
-                        player_choice = int(input("Opção: "))
-                        
-                        if player_choice == 1:
-                            while True:
+                    if self._check_bets == True:
+                        self.print_table_cards(show_table_cards)
+                        show_table_cards += 1
+                        break
+
+            winner = self.victory_verification()
+            print("O jogador " + winner.name_getter() + " Venceu!!!!!")           
+        elif menu_choice == 2:
+            print("Saindo...")
+            time.sleep(1)
+            exit    
+                
+
                                 
 
 
@@ -248,48 +308,9 @@ class Jogo:
             
             
 if __name__ == '__main__':
-    cards=[]
-    cards.append(Card("Hearts", 10))
-    cards.append(Card("Hearts", 11))
-    cards.append(Card("Hearts", 12))
-    cards.append(Card("Hearts", 13))
-    cards.append(Card("Hearts", 14))
-    cards.append(Card("Spades", 5))
-    cards.append(Card("Spades", 8))
-    cards.append(Card("Spades", 12))
-    cards.append(Card("Spades", 11))
-    cards.append(Card("Spades", 4))
-    
- 
-        
-    
-    hearts, spades, diamonds, clubs = [], [], [], []
-    
-    for card in cards:
-        if card.suit_getter() == "Hearts":
-            hearts.append(card.value_getter())
-        elif card.suit_getter() == "Spades":
-            spades.append(card.value_getter())
-        elif card.suit_getter == "Diamonds":
-            diamonds.append(card.value_getter())
-        else:
-            clubs.append(card.value_getter())
-    
-    print(hearts)
-    print(spades)
-    print(diamonds)
-    print(clubs)
-    
- 
-            
-    #print(total_sequences)
-    
-    royal_flush = [10, 11, 12, 13, 14]
-            
-    for sequence in total_sequences:
-        sequence.sort()
-        if sequence == royal_flush:
-            print("galooooooo")     
+    jogo = Jogo()
+
+    jogo.run()
             
          
 

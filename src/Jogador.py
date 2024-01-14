@@ -5,6 +5,8 @@ class Jogador:
         self._chips = chips
         self._chipsbet = 0
         self._fold = False
+        self._check = False
+        self._card_points = 0
 
     def name_getter(self):
         return self._name
@@ -15,9 +17,6 @@ class Jogador:
     def chipsbet_getter(self):
         return self._chipsbet
     
-    def fold_getter(self):
-        return self._fold
-    
     def name_setter(self, name):
         self._name = name
         
@@ -27,14 +26,26 @@ class Jogador:
     def chipsbet_setter(self, chipsbet):
         self._chipsbet = chipsbet
         
+    def fold_getter(self):
+        return self._fold
+    
     def fold_setter(self, fold):
         self._fold = fold
+    
+    def card_points_getter(self):
+        return self._card_points
+    
+    def card_points_setter(self, cards_points):
+        self._card_points = cards_points
     
     def cards_pop(self):
         return self._cards.pop()
     
     def cards_push(self, card):
         self._cards.append(card)
+    
+    def cards_getter(self):
+        return self._cards
         
     def call(self, current_bet):
         if current_bet <= self._chips:
@@ -61,13 +72,13 @@ class Jogador:
         return False
         
     def check(self):
-        return True
+        self._check = True
     
     def print_cards(self):
-        i = 1;
-        print("Deck do jogador" + self._nome+ ":\n")
+        i = 1
+        print(f"Deck do jogador {self._name}:")
         for card in self._cards:
-            print("Carta "+ i+": "+card.suit_getter()+ " "+ card.value_getter()+"\n")
+            print(f"Carta {i}: {card.suit_getter()} {card.value_getter()}")
             i = i + 1
              
             

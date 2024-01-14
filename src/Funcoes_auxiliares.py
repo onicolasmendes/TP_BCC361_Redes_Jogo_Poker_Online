@@ -120,9 +120,10 @@ def verify_four(two, three, four, five, six, seven, eight, nine, ten, eleven, tw
     else:
         return 0   
     
-def iniciate_list_zero(sequence, number):
+def iniciate_list_zero(number):
+    sequence = []
     for i in range(number):
-        sequence[i] = 0
+        sequence.append(0)
     return sequence
 
 def counting_double_triple(sequence):
@@ -151,10 +152,9 @@ def verify_straight(frequency):
         else:
             count = 0
     
-    if count == 5:
-        return True
-    else:
-        return False
+        if count == 5:
+            return True
+    return False
     
 def verify_triple(triples):
     if triples == 1:
@@ -176,9 +176,9 @@ def verify_double(doubles):
        
 def verify_double_triple(sequence):
     
-    frequency = []
     
-    iniciate_list_zero(frequency, 13)
+    
+    frequency = iniciate_list_zero(13)
     
     for i in sequence:
         if (i == 2):
