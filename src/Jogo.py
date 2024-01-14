@@ -78,7 +78,7 @@ class Jogo:
             for sequence in total_sequences:
                 sequence.sort()
                 if verify_royal_flush(sequence):
-                    return sequences_weights["Royal Flush"]
+                    return sequences_weights["Royal Flush"], "Royal Flush"
                 
             #Straight Flush
             potentials_straight_flush = []
@@ -90,11 +90,11 @@ class Jogo:
             sequence_value = 0  
             sequence_value = big_sequence(potentials_straight_flush)          
             if(sequence_value != 0):
-                return sequences_weights["Straight Flush"] * sequence_value
+                return sequences_weights["Straight Flush"] * sequence_value, "Straight Flush"
                 
             #Flush
             sequence_value = big_sequence(total_sequences)
-            return sequences_weights["Flush"] * sequence_value 
+            return sequences_weights["Flush"] * sequence_value , "Flush"
         
         elif len(two) == 4 or len(three) == 4 or len(four) == 4 or len(five) == 4 or len(six) == 4 or len(seven) == 4 or len(eight) == 4 or len(nine) == 4 or len(ten) == 4 or len(eleven) == 4 or len(twelve) == 4 or len(thirteen) == 4 or len(fourteen) == 4:
             #Four
@@ -103,7 +103,7 @@ class Jogo:
             sequence_value = verify_four(two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen)
             
             if sequence_value != 0:
-                return sequences_weights["Quadra"] * sequence_value
+                return sequences_weights["Quadra"] * sequence_value, "Quadra"
         
         else:
             sequences =  two + three + four + five + six + seven + eight + nine +  ten + eleven + twelve + thirteen + fourteen
@@ -127,7 +127,7 @@ class Jogo:
             sequence_value = big_triple_or_pair(potentials_full_house)
             
             if sequence_value != 0:
-                return sequences_weights["Full House"] * sequence_value
+                return sequences_weights["Full House"] * sequence_value, "Full House"
             
             #Straight
             frequency = []
@@ -143,7 +143,7 @@ class Jogo:
             sequence_value = big_sequence(potentials_straight)
 
             if sequence_value != 0:
-                return sequences_weights["Straight"] * sequence_value
+                return sequences_weights["Straight"] * sequence_value, "Straight"
             
             #Trinca
             frequency = []
@@ -160,7 +160,7 @@ class Jogo:
             sequence_value = big_triple_or_pair(potentials_trinca)
             
             if sequence_value != 0:
-                return sequences_weights["Trinca"] * sequence_value
+                return sequences_weights["Trinca"] * sequence_value, "Trinca"
             
             #Dois pares
             frequency = []
@@ -177,7 +177,7 @@ class Jogo:
             sequence_value = big_triple_or_pair(potentials_dois_pares)
             
             if sequence_value != 0:
-                return sequences_weights["Dois Pares"] * sequence_value
+                return sequences_weights["Dois Pares"] * sequence_value, "Dois Pares"
             
             #Par
             frequency = []
@@ -194,11 +194,11 @@ class Jogo:
             sequence_value = big_triple_or_pair(potentials_par)
             
             if sequence_value != 0:
-                return sequences_weights["Par"] * sequence_value
+                return sequences_weights["Par"] * sequence_value, "Par"
             
             #Carta mais alta
             higher_card = verify_highest_card(cards)
-            return sequences_weights["Carta mais alta"] * higher_card
+            return sequences_weights["Carta mais alta"] * higher_card, "Carta mais alta"
 
 
     def bet_time(self):
@@ -246,18 +246,24 @@ class Jogo:
 
 
     def victory_verification(self):
+        game_sequences = []
+        
         for jogador in self._jogadores:
             if jogador.fold_getter() == True:
                 continue
             
-            jogador.card_points_setter(self.poker_sequences(jogador.cards_getter()))
+            points, sequence = self.poker_sequences(jogador.cards_getter())
+            game_sequences.append(sequence)
+
+            jogador.card_points_setter(points)
             bigger_points = 0
 
             if jogador.card_points_getter() > bigger_points:
                 bigger_points = jogador.card_points_getter()
                 winner = jogador
+                winner_sequence = sequence
         
-        return winner
+        return winner, game_sequences, sequence
 
             
     def run(self):
@@ -285,8 +291,12 @@ class Jogo:
                         show_table_cards += 1
                         break
 
-            winner = self.victory_verification()
-            print("O jogador " + winner.name_getter() + " Venceu!!!!!")           
+            winner, game_sequences, sequence = self.victory_verification()
+            print(f"O jogador {winner.name_getter()} venceu com {sequence}")
+
+            print("Sequencia de todos os Jogadores:")
+            for sequence in game_sequences:
+                print(sequence)           
         elif menu_choice == 2:
             print("Saindo...")
             time.sleep(1)
