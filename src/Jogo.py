@@ -263,7 +263,7 @@ class Jogo:
                 winner = jogador
                 winner_sequence = sequence
         
-        return winner, game_sequences, sequence
+        return winner, game_sequences, winner_sequence
 
             
     def run(self):
