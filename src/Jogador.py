@@ -7,7 +7,14 @@ class Jogador:
         self._fold = False
         self._check = False
         self._card_points = 0
+        self._sequence = ""
 
+    def sequence_getter(self):
+        return self._sequence
+    
+    def sequence_setter(self, sequence):
+        self._sequence = sequence
+    
     def name_getter(self):
         return self._name
     
@@ -75,11 +82,10 @@ class Jogador:
         self._check = True
     
     def print_cards(self):
-        i = 1
-        print(f"Deck do jogador {self._name}:")
+        print(f"Deck do jogador {self._name}:\n")
+        print("Cartas: ", end="")
         for card in self._cards:
-            print(f"Carta {i}: {card.suit_getter()} {card.value_getter()}")
-            i = i + 1
+            print(f"{card.suit_getter()} {card.value_getter()} ", end="")
              
             
             

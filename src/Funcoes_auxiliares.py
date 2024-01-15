@@ -8,19 +8,6 @@ def generate_combinations(cards, number):
             sequence = list(sequence)
             real_sequences.append(sequence)
         return real_sequences
-
-def player_menu():
-    print("Ação:")
-    print("1 - Aumentar a aposta")
-    print("2 - Call")
-    print("3 - Fold")
-    print("4 - Check")
-    print("5 - AllIn")
-    
-def menu():
-    print("Poker Texas Hold'em")
-    print("1 - Iniciar")
-    print("2 - Sair")
         
 def verify_royal_flush(sequence):
     royal_flush = [10, 11, 12, 13, 14]
@@ -52,7 +39,7 @@ def separate_cards_by_suit(hearts, spades, diamonds, clubs, cards):
             hearts.append(card.value_getter())
         elif card.suit_getter() == "♠":
             spades.append(card.value_getter())
-        elif card.suit_getter == "♢":
+        elif card.suit_getter() == "♢":
             diamonds.append(card.value_getter())
         else:
             clubs.append(card.value_getter())

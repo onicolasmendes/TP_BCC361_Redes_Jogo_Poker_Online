@@ -41,6 +41,7 @@ if __name__ == '__main__':
     
     deck.shuffle()
     
+    print(len(deck.cards_getter()))
     for card in deck.cards_getter():
         print(card.value_getter())
         print(card.suit_getter())
