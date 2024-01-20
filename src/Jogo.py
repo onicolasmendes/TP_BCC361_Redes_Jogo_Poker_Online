@@ -202,39 +202,38 @@ class Jogo:
             return sequences_weights["Carta mais alta"] * higher_card, "Carta mais alta"
 
 
-    def bet_time(self):
+    def bet_time(self):     
         for jogador in self._jogadores:
             if jogador.fold_getter() == True:
                 continue
             
             while True:
-                print(f"\nFichas: {jogador.chips_getter()}         TOTAL BET: {self._total_bets}\n")
+                print(f"\nFICHAS: {jogador.chips_getter()}         MAIOR APOSTA DA RODADA: {self._current_value}        TOTAL BET: {self._total_bets}\n")
                 jogador.print_cards()
                 self.show_player_menu()
                 while True:
-                    player_choice = int(input("Opção: "))
+                    player_choice = int(input("Opção:"))
                     if player_choice > 0 and player_choice < 7:
                         break
                     else:
-                        print("Opcao Invalida!!")
+                        print("Opção Inválida!")
                         
                 if player_choice == 1:
-                    try:
-                        value = int(input("Valor: "))
-                        if jogador.raise_bet(value) == True:
-                            self._current_value = value
-                            self._total_bets += value
-                            self._check_bets = False
-                            break
-                    except:
-                        print("Valor Invalido!")
+                    value = int(input("Valor: "))
+                    if jogador.raise_bet(value, self._current_value) == True:
+                        self._current_value = value
+                        self._total_bets += value
+                        self._check_bets = False
+                        break
+                    else:
+                        print("Acao Invalida")
                 elif player_choice == 2:
-                    try:
-                        if jogador.call(self._current_value) == True:
-                            self._total_bets += self._current_value
-                            break
-                    except:
-                        print("Saldo Insuficiente")
+                    if jogador.call(self._current_value) == True:
+                        self._total_bets += self._current_value
+                        self._check_bets = True
+                        break
+                    else:
+                        print("Acao Invalida")
                 elif player_choice == 3:
                     jogador.fold()
                     break
@@ -242,45 +241,15 @@ class Jogo:
                     jogador.check()
                     break
                 elif player_choice == 5:
-                    try:
-                        if jogador.all_in() == True:
-                            if jogador.chipsbet_getter() > self._current_value:
-                                self._current_value = jogador.chipsbet_getter()
-                    except:
-                        print("Fichas Zeradas!")
-
+                    if jogador.all_in(self._current_value) == True:
+                        self._current_value = jogador.chips_getter()
+                        self._total_bets += self._current_value
+                        jogador.chips_setter(0)
+                        break
+                    else:
+                        print("Acao Invalida")
 
     def victory_verification(self):
-        game_sequences = []
-        winner_players = []
-        bigger_points = 0
-        
-        for jogador in self._jogadores:
-            if jogador.fold_getter() == True:
-                continue
-            
-            points, sequence = self.poker_sequences(jogador.cards_getter())
-            game_sequences.append(sequence)
-
-            print(f"Jogador : {jogador.name_getter()}      | POntos: {points}   | Sequencia: {sequence}")
-
-            jogador.card_points_setter(points)
-
-            if jogador.card_points_getter() > bigger_points:
-                bigger_points = jogador.card_points_getter()
-                winner = jogador
-                winner_sequence = sequence
-        
-        for jogador in self._jogadores:
-            if jogador.cards_points_getter() == bigger_points:
-                winner_players.append(jogador)
-
-        if len(winner_players) >= 2:
-            empate = True
-        
-        return winner, game_sequences, winner_sequence
-
-    def exemple(self):
 
         players = []
         list_points = []
@@ -325,8 +294,31 @@ class Jogo:
         print("3 - Fold")
         print("4 - Check")
         print("5 - AllIn")
-
-            
+        
+    def clear_players(self):
+        for jogador in self._jogadores:
+            jogador._cards.clear()
+            jogador.chipsbet_setter(0)
+            jogador.fold_setter(False)
+            jogador.sequence_setter("")
+    
+    def verify_fold(self):
+        active = 0
+        for jogador in self._jogadores:
+            if jogador.fold_getter() == False:
+                active += 1
+        
+        if active == 1:
+            return True
+        
+        return False 
+    
+    def remove_losers(self):
+        for i in range(len(self._jogadores)):
+            if self._jogadores[i].chips_getter() == 0:
+                self._jogadores.pop(i)
+        
+    #def verify_qtd_players(self):       
     def run(self):
         
         self.show_menu()
@@ -341,6 +333,8 @@ class Jogo:
             while True:
                 initial_chips = int(input("Digite a quantidade inicial de fichas que todos os jogadores receberao(1000 - 10000):"))
                 if initial_chips >= 1000 and initial_chips <= 10000:
+                    self._current_value = 0
+                    self._total_bets = 0
                     break
                 else:
                     print("Quantidade de fichas invalidas!!") 
@@ -354,75 +348,76 @@ class Jogo:
             
             
             self.initial_players(qtd_players, initial_chips)
-            print("Embaralhando cartas...")
-            self.distribute_cards()
-            self.set_table_cards()
-            time.sleep(1)
-
-            show_table_cards = 3
-            while(show_table_cards <= 5):
-                while True:
-                    self.bet_time()
-                    self._check_bets = True
-                    
-                    if self._check_bets == True:
-                        self.print_table_cards(show_table_cards)
-                        show_table_cards += 1
-                        break
-                    
-
-            winners, victory_count = self.exemple()
             
-            if victory_count == 1:
-                print(f"\n jogador {winners[0].name_getter()} venceu com um {winners[0].sequence_getter()}")
-            else:
-                bet = self._total_bets / victory_count
-                
-                print("Os players ", end="")
-                for winner in winners:
-                    print(f"{winner.name_getter()}", end="")
-                    total_chips = winner.chips_getter() + bet
-                    winner.chips_setter(total_chips)
-                print(f" com um {winners[0].sequence_getter()} \n")
+            play = True
+            while play:
+                print("Embaralhando cartas...")
+                self.distribute_cards()
+                self.set_table_cards()
+                time.sleep(1)
 
-            print("Sequencia de todos os Jogadores:")
-            for jogador in self._jogadores:
-                print(f"Jogador {jogador.name_getter()} ===> {jogador.sequence_getter()}")           
-        
+                show_table_cards = 3
+                q_players = True
+                while(show_table_cards <= 5 and q_players):
+                    while True:
+                        
+                        self.bet_time()
+                        
+                        if self.verify_fold() == True:
+                            q_players = False
+                            break
+                        
+                        if self._check_bets == True:
+                            self._current_value = 0
+                            self.print_table_cards(show_table_cards)
+                            show_table_cards += 1
+                            break
+
+                winners, victory_count = self.victory_verification()
+            
+                if victory_count == 1:
+                    print(f"\nJogador {winners[0].name_getter()} venceu com um {winners[0].sequence_getter()} e ganhou {self._total_bets} fichas!")
+                    winners[0].chips_setter(winners[0].chips_getter() + self._total_bets)
+                else:
+                    bet = self._total_bets / victory_count
+                    
+                    print("Os players ", end="")
+                    for winner in winners:
+                        print(f"{winner.name_getter()} ", end="")
+                        total_chips = winner.chips_getter() + bet
+                        winner.chips_setter(total_chips)
+                    print(f"empataram com um {winners[0].sequence_getter()} e cada um ganhou {bet} fichas!\n")
+
+                print("Sequencia de todos os Jogadores:")
+                for jogador in self._jogadores:
+                    print(f"Jogador {jogador.name_getter()} ===> {jogador.sequence_getter()}")
+
+
+                while True:
+                    choice = input("Deseja encerrar o jogo?")
+                    choice = choice.upper()
+                    if choice == "YES":
+                        play = False
+                        break
+                    elif choice == "NO":
+                        self._total_bets = 0
+                        self._current_value = 0
+                        self._table_cards.clear()
+                        self._deck = Deck()
+                        self.clear_players()
+                        if self.remove_losers():
+                            play = False
+                        break
+                    else:
+                        print("Opcao Invalida!")
+                            
         elif menu_choice == 2:
             print("Saindo...")
             time.sleep(1)
             exit    
-                
-
-                                
-
-
-                        
-                        
                     
-                    
-                
-
-            
-            
-
-            
-            
 if __name__ == '__main__':
     jogo = Jogo()
-
+ 
     jogo.run()
-            
-         
-
-
-
-
-
-
-
     
-
-     
-        

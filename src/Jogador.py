@@ -8,6 +8,7 @@ class Jogador:
         self._check = False
         self._card_points = 0
         self._sequence = ""
+        self._exit = False
 
     def sequence_getter(self):
         return self._sequence
@@ -55,7 +56,7 @@ class Jogador:
         return self._cards
         
     def call(self, current_bet):
-        if current_bet <= self._chips:
+        if current_bet <= self._chips and current_bet != 0:
             self._chipsbet += current_bet
             self._chips -= current_bet
             return True
@@ -64,8 +65,8 @@ class Jogador:
     def fold(self):
         self._fold = True
         
-    def raise_bet(self, value):
-        if value <= self._chips:
+    def raise_bet(self, value, current_bet):
+        if value <= self._chips and value >= current_bet:
             self._chipsbet += value 
             self._chips -= value
             return True
@@ -74,7 +75,6 @@ class Jogador:
     def all_in(self, current_value):
         if current_value <= self._chips:
             self._chipsbet += self._chips
-            self._chips = 0
             return True
         return False
         
