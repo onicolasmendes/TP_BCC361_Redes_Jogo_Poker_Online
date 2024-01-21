@@ -8,8 +8,7 @@ class Jogador:
         self._check = False
         self._card_points = 0
         self._sequence = ""
-        self._exit = False
-
+    
     def sequence_getter(self):
         return self._sequence
     

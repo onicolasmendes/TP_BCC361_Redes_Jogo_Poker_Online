@@ -204,6 +204,9 @@ class Jogo:
 
     def bet_time(self):     
         for jogador in self._jogadores:
+            if self.verify_number_valid_players() == False:
+                break
+            
             if jogador.fold_getter() == True:
                 continue
             
@@ -299,7 +302,10 @@ class Jogo:
         for jogador in self._jogadores:
             jogador._cards.clear()
             jogador.chipsbet_setter(0)
-            jogador.fold_setter(False)
+            if jogador.chips_getter() != 0:
+                jogador.fold_setter(False)
+            else:
+                jogador.fold_setter(True)
             jogador.sequence_setter("")
     
     def verify_fold(self):
@@ -310,15 +316,17 @@ class Jogo:
         
         if active == 1:
             return True
+
         
-        return False 
-    
-    def remove_losers(self):
-        for i in range(len(self._jogadores)):
-            if self._jogadores[i].chips_getter() == 0:
-                self._jogadores.pop(i)
+    def verify_number_valid_players(self):
+        valid_players = 0
+        for jogador in self._jogadores:
+            if jogador.fold_getter() == False:
+                valid_players += 1
+        if valid_players == 1 or valid_players == 0:
+            return False
+        return True  
         
-    #def verify_qtd_players(self):       
     def run(self):
         
         self.show_menu()
@@ -378,7 +386,7 @@ class Jogo:
                 if victory_count == 1:
                     print(f"\nJogador {winners[0].name_getter()} venceu com um {winners[0].sequence_getter()} e ganhou {self._total_bets} fichas!")
                     winners[0].chips_setter(winners[0].chips_getter() + self._total_bets)
-                else:
+                elif victory_count > 1:
                     bet = self._total_bets / victory_count
                     
                     print("Os players ", end="")
@@ -390,7 +398,10 @@ class Jogo:
 
                 print("Sequencia de todos os Jogadores:")
                 for jogador in self._jogadores:
-                    print(f"Jogador {jogador.name_getter()} ===> {jogador.sequence_getter()}")
+                    if jogador.fold_getter() == True:
+                        continue
+                    else:
+                        print(f"Jogador {jogador.name_getter()} ===> {jogador.sequence_getter()}")
 
 
                 while True:
@@ -405,8 +416,9 @@ class Jogo:
                         self._table_cards.clear()
                         self._deck = Deck()
                         self.clear_players()
-                        if self.remove_losers():
+                        if self.verify_number_valid_players():
                             play = False
+                            print("Sem jogadores suficientes para comecar outra mao")
                         break
                     else:
                         print("Opcao Invalida!")
