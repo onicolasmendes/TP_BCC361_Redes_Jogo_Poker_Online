@@ -27,7 +27,7 @@ def threadSend(thread):
 
     #Esperando para digitar uma mensagem e enviando-a
     while(True):
-        msg = nome + " -> " + input("Digite alguma coisa (para sair, digite quit): ")
+        msg = "\n" + nome + " -> " + input("Digite alguma coisa (para sair, digite quit): ")
         msg = msg[:msg_size]
 
         thread.sock.sendall(msg.encode('utf-8'))
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Conectando com o servidor
-    server_addr = ("localhost", 7891)
+    server_addr = ("localhost", 5050)
     #server_addr = ("0.tcp.sa.ngrok.io", 16872)
 
     client_socket.connect(server_addr)
