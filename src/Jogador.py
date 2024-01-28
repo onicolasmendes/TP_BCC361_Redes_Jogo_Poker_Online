@@ -81,10 +81,11 @@ class Jogador:
         self._check = True
     
     def print_cards(self):
-        print(f"Deck do jogador {self._name}:\n")
-        print("Cartas: ", end="")
+        msg = f"Deck do jogador {self._name}:\n"
+        msg = msg + "Cartas: "
         for card in self._cards:
-            print(f"{card.suit_getter()} {card.value_getter()} ", end="")
+            msg = msg + f"{card.suit_getter()} {card.value_getter()} "
+        return msg
              
             
             
