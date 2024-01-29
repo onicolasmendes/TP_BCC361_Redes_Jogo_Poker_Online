@@ -2,6 +2,12 @@ import socket
 import threading
 import sys
 
+#Codigo ANSI para cores
+cor_vermelha = '\033[91m'
+cor_verde = '\033[92m'
+cor_amarela = '\033[93m'
+cor_reset = '\033[0m'
+
 class ThreadData :
     def __init__(self, sock, thread):
         self.sock = sock
@@ -25,7 +31,6 @@ def threadSend(thread):
 
     #Esperando para digitar uma mensagem e enviando-a
     while(True):
-        #msg = "\n" + nome + " -> " + input("Digite alguma coisa (para sair, digite quit): ")
         msg = input()
         msg = msg[:msg_size]
 

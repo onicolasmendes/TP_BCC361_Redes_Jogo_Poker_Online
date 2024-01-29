@@ -4,6 +4,7 @@ from Jogador import Jogador
 from Funcoes_auxiliares import separate_cards_by_suit, separate_cards_by_number, verify_straight_flush, generate_combinations, generate_all_combinations, verify_royal_flush, big_sequence, verify_four,verify_double_triple, counting_double_triple, verify_full_house, big_triple_or_pair, verify_straight, verify_triple, verify_two_doubles,  verify_double, verify_highest_card 
 import time
 
+
 class Jogo:
     def __init__(self, jogadores):
         self._jogadores = jogadores
@@ -13,10 +14,12 @@ class Jogo:
         self._table_cards = []
         self._check_bets = True
         
+    #Coloca as cartas em uma lista de cartas da mesa
     def set_table_cards(self):
         for i in range(5):
             self._table_cards.append(self._deck.pop())
 
+    #Retorna uma mensagem que mostrara determinada quantidade de cartas no jogo
     def print_table_cards(self, qtd):
         #print("\nCARTAS NA MESA:")
         #for i in range(qtd):
@@ -74,7 +77,13 @@ class Jogo:
         for i in range(qtd):   
             name = input(f"Digite o nome do jogador {i + 1}:")
             self._jogadores.append(Jogador(name, chips))
-        
+
+    def remove_player(self, position):
+        self._jogadores.pop(position)
+
+    
+    def add_player(self, player):
+        self._jogadores.append(player)   
     
     
     

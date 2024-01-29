@@ -1,5 +1,5 @@
 class Jogador:
-    def __init__(self, name, chips):
+    def __init__(self, name, chips,socket):
         self._cards = [] 
         self._name = name 
         self._chips = chips
@@ -8,6 +8,13 @@ class Jogador:
         self._check = False
         self._card_points = 0
         self._sequence = ""
+        self._socket = socket
+
+    def socket_getter(self):
+        return self._socket
+    
+    def socket_setter(self, socket):
+        self._socket = socket
     
     def sequence_getter(self):
         return self._sequence
@@ -77,8 +84,11 @@ class Jogador:
             return True
         return False
         
-    def check(self):
-        self._check = True
+    def check(self, value):
+        if value == 0:
+            self._check = True
+            return True
+        return False
     
     def print_cards(self):
         msg = f"Deck do jogador {self._name}:\n"
