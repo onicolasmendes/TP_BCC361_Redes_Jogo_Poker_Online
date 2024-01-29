@@ -13,6 +13,11 @@ class Jogador:
     def socket_getter(self):
         return self._socket
     
+    def __eq__(self, outro_objeto):
+        if isinstance(outro_objeto, Jogador):
+            return self._socket == outro_objeto.socket_getter()
+        return False
+    
     def socket_setter(self, socket):
         self._socket = socket
     
@@ -72,7 +77,7 @@ class Jogador:
         self._fold = True
         
     def raise_bet(self, value, current_bet):
-        if value <= self._chips and value >= current_bet:
+        if value <= self._chips and value > current_bet:
             self._chipsbet += value 
             self._chips -= value
             return True

@@ -44,7 +44,7 @@ def send_message_all_except_one(clients, exception, msg):
 def clean_buffer(skt):
     #Limpa o buffer de um cliente 
     try:
-        skt.settimeout(0.02)  
+        skt.settimeout(0.015)  
         trash = skt.recv(1024).decode('utf-8')
     except socket.timeout:
         print("")
@@ -88,46 +88,35 @@ def verify_new_players(clients, jogo, chips):
             clean_all_buffers(clients) 
             player = Jogador(name, chips, client)
             jogo.add_player(player)
-            
+
+def define_round_chief(clients, jogo):
+    for jogador in jogo.players_getter():
+        for client in clients:
+            if client == jogador.socket_getter():
+                return client
+                 
             
 def confirm_next_round(clients, jogo):
     msg = "Aguardando a confirmação de todos os players para inicio da próxima rodada...\n"
     send_message_all(clients, msg)
-    clean_all_buffers(clients) 
+    clean_all_buffers(clients)
+  
     
     for client in clients:
+        
         msg = "Deseja jogar a próxima partida (yes ou no):"  
         client.sendall(msg.encode('utf-8'))
         choice =  client.recv(1024).decode('utf-8')
         clean_all_buffers(clients)
         choice = choice.upper()
-        if choice == "YES":
+        
+        if choice == "NO":
+            for jogador in jogo.players_getter():
+                if jogador.socket_getter() == client:
+                    jogo.remove_player(jogador)
+            clients.remove(client)
+        else:
             continue
-        else: 
-            index = 0
-            jogadores = jogo.players_getter()
-            for i in range(len(jogadores)):
-                if jogadores[i].socket_getter() == client:
-                    
-                    msg = f"O jogador {jogadores[i].name_getter()} saiu do jogo!\n"
-                    send_message_all_except_one(clients, client, msg)
-                    clean_all_buffers(clients)
-                    
-                    msg = f"Você saiu da seção! Para entrar em outra seção novamente execute o arquivo Client.py novamente!\n"
-                    client.sendall(msg.encode('utf-8'))
-                    clean_all_buffers(clients)
-                    
-                    print(f"{jogadores[i].name_getter()} saiu do jogo!!\n")
-                    
-                    jogo.remove_player(index)
-                    break
-                index += 1
-            
-            
-            for i in range(len(clients)):
-                if client == clients[i]:
-                    clients.pop(i)
-                    break
                      
 
 def verify_valid_qtd_players(clients):
@@ -139,7 +128,11 @@ def verify_valid_qtd_players(clients):
     if qtd < 1:
         return False
     return True
-                            
+def define_actual_player(clients, jogador):
+    for client in clients:
+        if client == jogador.socket_getter():
+            return client
+                             
 def game(section_socket, clients, number_section):
     
     #Colocando o socket da secao em modo de escuta
@@ -188,13 +181,13 @@ def game(section_socket, clients, number_section):
         jogo.distribute_cards()
         jogo.set_table_cards()
         #time.sleep(1)
-        i = 0
+        #i = 0
         show_table_cards = 3
         q_players = True
         while(show_table_cards <= 5 and q_players):
             while True:
                 #BET TIME
-                i = 0
+                #i = 0
                 for jogador in jogo.players_getter() :
                     
                     if jogo.verify_number_valid_players() == False:
@@ -202,11 +195,12 @@ def game(section_socket, clients, number_section):
             
                     #Verifica se o jogador foldou na partida
                     if jogador.fold_getter() == True:
-                        i += 1
+                        #i += 1
                         continue
                     
                     #Avisa os demais jogadores qual jogador está fazendo a jogada
-                    atual_player = clients[i]
+                    #atual_player = clients[i]
+                    atual_player = define_actual_player(clients, jogador)
                     msg = f"O jogador {jogador.name_getter()} está fazendo a sua jogada. Aguarde a sua vez!\n"
                     send_message_all_except_one(clients, atual_player, msg)
                     clean_all_buffers(clients)
@@ -304,7 +298,7 @@ def game(section_socket, clients, number_section):
                                 msg = "Ação Inválida - Suas fichas disponíveis são menores que a atual aposta da rodada\n"
                                 atual_player.sendall(msg.encode('utf-8'))
                                 clean_all_buffers(clients)
-                    i += 1
+                    #i += 1
                 
                 if jogo.verify_fold() == True:
                     q_players = False
@@ -364,19 +358,23 @@ def game(section_socket, clients, number_section):
                 play = False
                 break
             elif choice == "NO":
+                msg = "O servidor está verificando e colhendo informações sobre os novos jogadores para entrar na partida\n"
+                send_message_all(clients, msg)
+                clean_all_buffers(clients)
+                
+                verify_new_players(clients, jogo, chips)
+                
+                confirm_next_round(clients, jogo)
+            
+                
                 jogo.total_bets_setter(0)
                 jogo.current_value_setter(0)
                 jogo.table_cards_getter().clear()
                 jogo.deck_setter(Deck())
                 jogo.clear_players()
                 
-                confirm_next_round(clients, jogo)
                 
-                msg = "O servidor está verificando e colhendo informações sobre os novos jogadores para entrar na partida\n"
-                send_message_all(clients, msg)
-                clean_all_buffers(clients)
                 
-                verify_new_players(clients, jogo, chips)
                 if verify_valid_qtd_players(clients) == False:
                     #play = False
                     msg = "Sem jogadores suficientes para começar outra mão\n\nO servidor está aguardando a entrada de novos jogadores para ter uma quantidade válida\n"

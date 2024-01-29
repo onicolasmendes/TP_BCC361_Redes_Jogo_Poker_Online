@@ -49,6 +49,9 @@ class Jogo:
     
     def players_getter(self):
         return self._jogadores
+
+    def players_setter(self, jogadores):
+        self._jogadores = jogadores
     
     def total_bets_setter(self, value):
         self._total_bets = value
@@ -78,8 +81,8 @@ class Jogo:
             name = input(f"Digite o nome do jogador {i + 1}:")
             self._jogadores.append(Jogador(name, chips))
 
-    def remove_player(self, position):
-        self._jogadores.pop(position)
+    def remove_player(self, jogador):
+        self._jogadores.remove(jogador)
 
     
     def add_player(self, player):
