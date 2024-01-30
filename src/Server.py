@@ -471,7 +471,6 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                 verify_new_players(clients, jogo, chips)
                 
                 confirm_next_round(clients, jogo, bigblind)
-            
                 
                 jogo.total_bets_setter(0)
                 jogo.current_value_setter(0)
@@ -506,7 +505,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
 if __name__ == "__main__":
     # Configurando um socket para aceitar IPv4 (AF_INET) e settando o tipo do socket para TCP
     #Um socket associado a cada thread
-    main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  
     
     section_1_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     section_2_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -514,14 +513,12 @@ if __name__ == "__main__":
 
     #0.0.0.0 para permitir conexões de qualquer endereço
     #Uma porta para cada sessão
-    server_addr = ('0.0.0.0', 5050)
     
     section_1_addr = ('0.0.0.0', 9879)
     section_2_addr = ('0.0.0.0', 9880)
     section_3_addr = ('0.0.0.0', 9881)
 
     #Vinculando o endereço e porta de cada sessão ao socket respectivo da sessão
-    main_socket.bind(server_addr)
     
     section_1_socket.bind(section_1_addr)
     section_2_socket.bind(section_2_addr)
