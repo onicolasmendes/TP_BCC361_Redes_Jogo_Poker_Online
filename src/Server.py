@@ -39,6 +39,11 @@ def send_message_all_except_one(clients, exception, msg):
     for client in clients:
         if client != exception:
             client.sendall(msg.encode('utf-8'))
+            
+def circular_queue(jogo):
+    inicio = (jogo.players_getter())[0]
+    jogo.add_player(inicio)
+    (jogo.players_getter()).pop(0)
     
         
 def clean_buffer(skt):
@@ -102,33 +107,49 @@ def confirm_next_round(clients, jogo):
     clean_all_buffers(clients)
   
     clients_will_be_removed = []
+    jogadores_will_be_removed = []
     
     for client in clients:
-        msg = "Deseja jogar a próxima partida (yes ou no):"  
+        msg = "Deseja jogar a próxima partida ou sair (sair - para sair da partida | yes - para jogar a próxima partida):"  
         client.sendall(msg.encode('utf-8'))
         choice =  client.recv(1024).decode('utf-8')
         clean_all_buffers(clients)
         choice = choice.upper()
         
-        if choice == "NO":
+        if choice == "SAIR":
             for jogador in jogo.players_getter():
                 if jogador.socket_getter() == client:
-                    jogo.remove_player(jogador)
+                    
+                    #Avisa os demais jogadores que o player saiu do jogo
+                    msg = f"O jogador {jogador.name_getter()} não deseja jogar a próxima partida e saiu do jogo!\n"
+                    send_message_all_except_one(clients, jogador.socket_getter(), msg)
+                    clean_all_buffers(clients)
+                    
+                    jogadores_will_be_removed.append(jogador)
+                    
+                    #Avisa o jogador que ele será desconectado
+                    msg = "Você será desconectado da seção!\n"  
+                    client.sendall(msg.encode('utf-8'))
+                    clean_all_buffers(clients)
+                    
             clients_will_be_removed.append(client)
             
     for client in clients_will_be_removed:
         clients.remove(client)
+        
+        msg = "sair"  
+        client.sendall(msg.encode('utf-8'))
+        clean_all_buffers(clients)
+        
+    for jogador in jogadores_will_be_removed:
+        jogo.remove_player(jogador)
                      
 
-def verify_valid_qtd_players(clients):
-    qtd = 0
-    
-    for client in clients:
-        qtd += 1
-        
-    if qtd < 1:
+def verify_valid_qtd_players(clients, jogo):
+    if len(jogo.players_getter()) <= 1:
         return False
     return True
+
 def define_actual_player(clients, jogador):
     for client in clients:
         if client == jogador.socket_getter():
@@ -208,7 +229,7 @@ def game(section_socket, clients, number_section):
                     
                     while True:
                         msg = ""
-                        msg = f"\nFICHAS: {jogador.chips_getter()}         MAIOR APOSTA DA RODADA: {jogo.current_value_getter()}        TOTAL BET: {jogo.total_bets_getter()}\n"
+                        msg = f"\nFICHAS: {jogador.chips_getter()}         MAIOR APOSTA DA RODADA: {jogo.current_value_getter()}        BUCKET: {jogo.total_bets_getter()}\n"
                         msg = msg + jogador.print_cards()
                         msg = msg + jogo.show_player_menu()
                         msg = msg + "Digite a sua opção:"
@@ -351,7 +372,7 @@ def game(section_socket, clients, number_section):
             
             #Repostas do chefe de sala sobre a continuidade da partida
             
-            msg = "Deseja encerrar o jogo(yes ou no)?"
+            msg = "Deseja encerrar a seção do servidor(yes ou no)?"
             configer.sendall(msg.encode('utf-8'))
             choice =  configer.recv(1024).decode('utf-8')
             clean_all_buffers(clients)
@@ -378,15 +399,18 @@ def game(section_socket, clients, number_section):
                 
                 
                 
-                if verify_valid_qtd_players(clients) == False:
+                if verify_valid_qtd_players(clients, jogo) == False:
                     #play = False
-                    msg = "Sem jogadores suficientes para começar outra mão\n\nO servidor está aguardando a entrada de novos jogadores para ter uma quantidade válida\n"
+                    msg = "Sem jogadores suficientes para começar outra mão\n\nO servidor está aguardando a entrada de novos jogadores para ter uma quantidade válida...\nPor favor, aguarde...\n"
                     send_message_all(clients, msg)
                     clean_all_buffers(clients) 
                     
                     #Aguarda outros jogadores entrarem para iniciar uma partida válida
-                    while verify_valid_qtd_players(clients) == False:
+                    while verify_valid_qtd_players(clients, jogo) == False:
                         verify_new_players(clients, jogo, chips)
+                        
+                circular_queue(jogo)
+                
                 break
             else:
                 configer = define_round_chief(clients, jogo)
@@ -489,9 +513,4 @@ if __name__ == "__main__":
     #Fechando todos os sockets
     section_1_socket.close()
     section_2_socket.close()
-    section_3_socket.close()  
-    
-    
-    
-    
-    
+    section_3_socket.close()      

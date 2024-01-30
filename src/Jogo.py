@@ -25,9 +25,10 @@ class Jogo:
         #for i in range(qtd):
         #    print(f"{self._table_cards[i].suit_getter()}{self._table_cards[i].value_getter()}  ", end="")
         #print("\n")
-        msg = "\nCARTAS NA MESA:"
+        msg = "\nCARTAS NA MESA:\n=================================================================\n"
         for i in range(qtd):
             msg = msg + f"{self._table_cards[i].suit_getter()}{self._table_cards[i].value_getter()}  "
+        msg = msg + "\n================================================================="
         msg = msg + "\n"
         return msg
     
@@ -255,7 +256,7 @@ class Jogo:
                 continue
             
             while True:
-                print(f"\nFICHAS: {jogador.chips_getter()}         MAIOR APOSTA DA RODADA: {self._current_value}        TOTAL BET: {self._total_bets}\n")
+                print(f"\nFICHAS: {jogador.chips_getter()}         MAIOR APOSTA DA RODADA: {self._current_value}        BUCKET: {self._total_bets}\n")
                 jogador.print_cards()
                 self.show_player_menu()
                 while True:

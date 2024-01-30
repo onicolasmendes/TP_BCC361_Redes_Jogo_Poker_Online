@@ -1,6 +1,7 @@
 import socket
 import threading
 import sys
+import os
 
 #Codigo ANSI para cores
 cor_vermelha = '\033[91m'
@@ -22,8 +23,15 @@ def threadRecv(thread):
 
         if not buffer:
             break
-
-        print(buffer)
+        
+        #Encerra a conexão com o servidor
+        if buffer == "sair":
+            break
+          
+        print(buffer)   
+         
+    thread.sock.shutdown(socket.SHUT_RDWR)
+    thread.sock.close()
 
 
 def threadSend(thread):
@@ -36,14 +44,11 @@ def threadSend(thread):
 
         thread.sock.sendall(msg.encode('utf-8'))
 
-        if 'quit' in msg:
+        msg = msg.upper()
+        
+        if 'SAIR' in msg:
             break
-    
-
-    print("fechando a conexão e encerrando o programa...")
-    thread.sock.shutdown(socket.SHUT_RDWR)
-    thread.sock.close()
-
+        
 
 if __name__ == "__main__":
     #Configurando um socket com IPv4 e TCP
@@ -80,4 +85,6 @@ if __name__ == "__main__":
     thread_send_id.join()
     thread_recv_id.join()
 
-    print("Todas as threads terminaram. Fechando cliente.")
+    print("Para jogar novamente em uma seção, execute o arquivo Client.py no terminal!\n")
+
+    
