@@ -101,9 +101,9 @@ def confirm_next_round(clients, jogo):
     send_message_all(clients, msg)
     clean_all_buffers(clients)
   
+    clients_will_be_removed = []
     
     for client in clients:
-        
         msg = "Deseja jogar a próxima partida (yes ou no):"  
         client.sendall(msg.encode('utf-8'))
         choice =  client.recv(1024).decode('utf-8')
@@ -114,9 +114,10 @@ def confirm_next_round(clients, jogo):
             for jogador in jogo.players_getter():
                 if jogador.socket_getter() == client:
                     jogo.remove_player(jogador)
-            clients.remove(client)
-        else:
-            continue
+            clients_will_be_removed.append(client)
+            
+    for client in clients_will_be_removed:
+        clients.remove(client)
                      
 
 def verify_valid_qtd_players(clients):
@@ -342,12 +343,14 @@ def game(section_socket, clients, number_section):
         clean_all_buffers(clients)           
         
         while True:
+            configer = define_round_chief(clients, jogo)
             #Informando os outros jogadores que o chefe de sala está decidindo sobre a continuidade da partida
             msg = f"Aguarde enquanto o chefe de sala ({players[0].name_getter()}) decide se a partida continuará ou não!\n"
             send_message_all_except_one(clients, configer, msg)
             clean_all_buffers(clients)
             
             #Repostas do chefe de sala sobre a continuidade da partida
+            
             msg = "Deseja encerrar o jogo(yes ou no)?"
             configer.sendall(msg.encode('utf-8'))
             choice =  configer.recv(1024).decode('utf-8')
@@ -386,6 +389,7 @@ def game(section_socket, clients, number_section):
                         verify_new_players(clients, jogo, chips)
                 break
             else:
+                configer = define_round_chief(clients, jogo)
                 msg = "Opcao Invalida!"  
                 configer.sendall(msg.encode('utf-8'))
                 choice =  configer.recv(1024).decode('utf-8')
