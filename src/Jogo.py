@@ -5,14 +5,14 @@ from Funcoes_auxiliares import separate_cards_by_suit, separate_cards_by_number,
 import time
 
 
-class Jogo:
+class Jogo:#Classe Jogo
     def __init__(self, jogadores):
-        self._jogadores = jogadores
-        self._deck = Deck()
-        self._current_value = 0
-        self._total_bets = 0
-        self._table_cards = []
-        self._check_bets = True
+        self._jogadores = jogadores #Atributo para lista de jogadores
+        self._deck = Deck() #Atributo para o Deck da mesa
+        self._current_value = 0 #Atributo para a aposta atual da mesa
+        self._total_bets = 0 #Atributo para somar as bets totais
+        self._table_cards = [] #Atributo para lista de cartas da mesa
+        self._check_bets = True #Atributo para validar as apostas
         
     #Coloca as cartas em uma lista de cartas da mesa
     def set_table_cards(self):
@@ -51,6 +51,11 @@ class Jogo:
     def players_getter(self):
         return self._jogadores
 
+    def desactivate_all_raised_bet_except_one(self, jogador):
+        for player in self._jogadores:
+            if player != jogador:
+                player.raised_bet_setter(False)
+            
     def players_setter(self, jogadores):
         self._jogadores = jogadores
     
@@ -347,6 +352,7 @@ class Jogo:
     def clear_players(self):
         for jogador in self._jogadores:
             jogador._cards.clear()
+            jogador.raised_bet_setter(False)
             jogador.chipsbet_setter(0)
             if jogador.chips_getter() != 0:
                 jogador.fold_setter(False)
@@ -363,7 +369,10 @@ class Jogo:
         if active == 1:
             return True
 
-        
+    def desactivate_all_raised_bet(self):
+        for jogador in self._jogadores:
+            jogador.raised_bet_setter(False)
+                
     def verify_number_valid_players(self):
         valid_players = 0
         for jogador in self._jogadores:

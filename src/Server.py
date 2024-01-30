@@ -5,14 +5,6 @@ import socket
 import threading
 import time
 
-#Codigo ANSI para cores
-cor_vermelha = '\033[91m'
-cor_verde = '\033[92m'
-cor_amarela = '\033[93m'
-cor_reset = '\033[0m'
-
-turn = 0
-
 NUM_THREADS = 30
 NUM_CONECTIONS = 30
 
@@ -30,12 +22,12 @@ class Th_data:
         self.sock = sock
 
 def send_message_all(clients, msg):
-    #Envia mensagem para todos os clientes de uma seção
+    #Envia mensagem para todos os clientes de uma sessão
     for client in clients:
         client.sendall(msg.encode('utf-8'))
         
 def send_message_all_except_one(clients, exception, msg):
-    #Envia mensagem para todos os clientes de uma seção com exceção de um específico
+    #Envia mensagem para todos os clientes de uma sessão com exceção de um específico
     for client in clients:
         if client != exception:
             client.sendall(msg.encode('utf-8'))
@@ -59,22 +51,30 @@ def clean_buffer(skt):
         skt.settimeout(None)
 
 def clean_all_buffers(clients):
-    #Limpa o buffer de todos os clientes de uma seção
+    #Limpa o buffer de todos os clientes de uma sessão
     for client in clients:
         if client != -1:
             clean_buffer(client)
     
+#Mantém o socket escutando e recebe conexões de clientes durante uma sessão acontecendo
 def manage_section_conection(socket, clients, section):
     
     #Escutando possíveis clientes
     socket.listen(NUM_CONECTIONS)
-    print(f"Escutando conexões na seção {section}\n")
+    print(f"Escutando conexões na sessão {section}\n")
     
+    #Verifica se o máximo de jogadores da sessão não foi atingido
     while True and len(clients) < 8:
+        #Aceita a conexão e adiciona na lista de clientes conectados
         client_socket, addr = socket.accept()
         clients.append(client_socket)
+        
+        #Comunica o cliente recém conectado que a partida está em andamento
+        msg = "Partida em andamento!\nAguarde a finalização para que você possa jogar!\n"  
+        client_socket.sendall(msg.encode('utf-8'))
         print(f"Cliente conectado\n")
 
+#A funcao verifica se novos players querem entrar no jogo
 def verify_new_players(clients, jogo, chips):
     for client in clients:
         presente = 0
@@ -94,21 +94,27 @@ def verify_new_players(clients, jogo, chips):
             player = Jogador(name, chips, client)
             jogo.add_player(player)
 
+
+#Define o chefe de cada round da partida
 def define_round_chief(clients, jogo):
+    #Passa no loop de jogadores e clientes para retornar o cliente que sera o chefe da sala
     for jogador in jogo.players_getter():
         for client in clients:
             if client == jogador.socket_getter():
                 return client
                  
             
-def confirm_next_round(clients, jogo):
+#Confirma o proximo round de cada jogador e fica aguardando a resposta de todos os jogadores
+def confirm_next_round(clients, jogo, bigblind):
     msg = "Aguardando a confirmação de todos os players para inicio da próxima rodada...\n"
     send_message_all(clients, msg)
     clean_all_buffers(clients)
   
+    #lista de clientes e jogadores que serao removidos da partida
     clients_will_be_removed = []
     jogadores_will_be_removed = []
     
+    #Loop para passar por cada cliente e perguntar se deseja jogar a proxima partida
     for client in clients:
         msg = "Deseja jogar a próxima partida ou sair (sair - para sair da partida | yes - para jogar a próxima partida):"  
         client.sendall(msg.encode('utf-8'))
@@ -116,6 +122,7 @@ def confirm_next_round(clients, jogo):
         clean_all_buffers(clients)
         choice = choice.upper()
         
+        #Se for sair ha um loop para porcurar o jogador comparando com seu cliente e adicionando ele a lista de jogadores que serao removidos
         if choice == "SAIR":
             for jogador in jogo.players_getter():
                 if jogador.socket_getter() == client:
@@ -128,12 +135,23 @@ def confirm_next_round(clients, jogo):
                     jogadores_will_be_removed.append(jogador)
                     
                     #Avisa o jogador que ele será desconectado
-                    msg = "Você será desconectado da seção!\n"  
+                    msg = "Você será desconectado da sessão!\n"  
                     client.sendall(msg.encode('utf-8'))
                     clean_all_buffers(clients)
                     
             clients_will_be_removed.append(client)
-            
+        else:
+            for jogador in jogo.players_getter():
+                #Remove os jogadores com fichas a menos que o necessário
+                if jogador.socket_getter() == client and jogador.chips_getter() < bigblind:
+                    jogadores_will_be_removed.append(jogador)
+                    clients_will_be_removed.append(client)
+                    
+                    msg = f"O jogador {jogador.name_getter()} será quickado da sessão, pois não possui fichas suficientes para participar da partida!\n"
+                    send_message_all(clients, msg)
+                    clean_all_buffers(clients)
+                
+    #Ao final, limpa as listas de clientes e jogadores que serao removidos
     for client in clients_will_be_removed:
         clients.remove(client)
         
@@ -144,47 +162,56 @@ def confirm_next_round(clients, jogo):
     for jogador in jogadores_will_be_removed:
         jogo.remove_player(jogador)
                      
-
-def verify_valid_qtd_players(clients, jogo):
+#Verifica a quantidade de players validos na partida
+def verify_valid_qtd_players(jogo):
     if len(jogo.players_getter()) <= 1:
         return False
     return True
 
+#Define quem sera o player a fazer a jogada
 def define_actual_player(clients, jogador):
+    #Procurando o player na lista de clientes
     for client in clients:
         if client == jogador.socket_getter():
             return client
                              
-def game(section_socket, clients, number_section):
+#Funcao principal do jogo
+def game(section_socket, clients, number_section, smallblind, bigblind):
     
     #Colocando o socket da secao em modo de escuta
     section_socket.listen(NUM_CONECTIONS)
-    print(f"Escutando na seção {number_section}\n")
+    print(f"Escutando na sessão {number_section}\n")
     
+    minimo_players = 3
     #Esperando a conexão de no mínimo 3 jogadores
-    for i in range(2):
+    for i in range(minimo_players):
         #Socket associado a cada cliente
         client_socket, addr = section_socket.accept()
         
         clients.append(client_socket)
         
-        print(f"Cliente {i} conectou na seção {number_section}\n")
+        msg = f"O cliente {i+1} conectou na sessão! Faltam {minimo_players-i-1} clientes para iniciar a sessão\n"
+        send_message_all(clients, msg)
+        clean_all_buffers(clients)
+        
+        print(f"Cliente {i} conectou na sessão {number_section}\n")
     
-    print(f"Seção {number_section} iniciada\n")
+    print(f"sessão {number_section} iniciada\n")
     
     manage_conections = threading.Thread(target=manage_section_conection, args=(section_socket, clients, number_section))
     manage_conections.start()
     
     #Configurando parâmetros iniciais do jogo
     #Fichas iniciais
-    
     players = []
     configer = clients[0]
-    msg = "Digite a quantidade inicial de fichas que todos os jogadores receberao(1000 - 10000):"
-    configer.sendall(msg.encode('utf-8'))
-    chips =  int(configer.recv(1024).decode('utf-8'))
-    clean_all_buffers(clients)
     
+    chips = 10000
+    
+    msg = f"Colhendo dados dos jogadores. Aguarde!\n"
+    send_message_all(clients, msg)
+    clean_all_buffers(clients)
+        
     #Nome dos jogadores
     for client in clients:
         msg = "Digite o seu nome:"
@@ -200,16 +227,21 @@ def game(section_socket, clients, number_section):
     while play:
         send_message_all(clients, "Embaralhando as cartas...\n")
         clean_all_buffers(clients)
+        msg = f"=================================================================\nInformações sobre a sessão:\nFichas iniciais de todos os players = {chips} fichas\nBlind = {smallblind}/{bigblind}\n=================================================================\n"
+        send_message_all(clients, msg)
+        clean_all_buffers(clients)
         jogo.distribute_cards()
         jogo.set_table_cards()
-        #time.sleep(1)
-        #i = 0
+        
+        turn = 0
+        player_number = 0
+        
         show_table_cards = 3
         q_players = True
         while(show_table_cards <= 5 and q_players):
             while True:
                 #BET TIME
-                #i = 0
+                
                 for jogador in jogo.players_getter() :
                     
                     if jogo.verify_number_valid_players() == False:
@@ -217,8 +249,40 @@ def game(section_socket, clients, number_section):
             
                     #Verifica se o jogador foldou na partida
                     if jogador.fold_getter() == True:
-                        #i += 1
                         continue
+                    
+                    #Iniciou uma nova roda e desativa o atributo que verifica se alguém aumentou a aposta
+                    if jogo.current_value_getter() == 0:
+                        jogo.desactivate_all_raised_bet()
+                    
+                    #Aposta inicial do smallblind
+                    if turn == 0  and player_number == 0:
+                        jogador.chips_setter(jogador.chips_getter() - smallblind)
+                        jogo.total_bets_setter(jogo.total_bets_getter() + smallblind)
+                        
+                        msg = f"O jogador {jogador.name_getter()} (SmallBlind) fez a aposta obrigatória de {smallblind} fichas!\n"
+                        send_message_all(clients, msg)
+                        clean_all_buffers(clients)
+                        player_number += 1
+                        continue
+                    
+                    #Pula o jogador que aumentou a aposta na ultima rodada
+                    if jogador.raised_bet_getter() == True:
+                        continue
+                    
+                    #Aposta inicial do bigblind   
+                    if turn == 0 and player_number == 1:
+                        jogador.chips_setter(jogador.chips_getter() - bigblind)
+                        jogo.current_value_setter(bigblind)
+                        jogo.total_bets_setter(jogo.total_bets_getter() + bigblind)
+                        
+                        msg = f"O jogador {jogador.name_getter()} (BigBlind) fez a aposta obrigatória de {bigblind} fichas!\n"
+                        send_message_all(clients, msg)
+                        clean_all_buffers(clients)
+                        
+                        player_number += 1
+                        continue
+                        
                     
                     #Avisa os demais jogadores qual jogador está fazendo a jogada
                     #atual_player = clients[i]
@@ -227,9 +291,10 @@ def game(section_socket, clients, number_section):
                     send_message_all_except_one(clients, atual_player, msg)
                     clean_all_buffers(clients)
                     
+                    #Loop de aposta de cada jogador
                     while True:
-                        msg = ""
-                        msg = f"\nFICHAS: {jogador.chips_getter()}         MAIOR APOSTA DA RODADA: {jogo.current_value_getter()}        BUCKET: {jogo.total_bets_getter()}\n"
+                        msg = "Agora é sua vez de jogar!\n\n"
+                        msg = msg + f"\nFICHAS: {jogador.chips_getter()}         MAIOR APOSTA DA RODADA: {jogo.current_value_getter()}        BUCKET: {jogo.total_bets_getter()}\n"
                         msg = msg + jogador.print_cards()
                         msg = msg + jogo.show_player_menu()
                         msg = msg + "Digite a sua opção:"
@@ -237,12 +302,14 @@ def game(section_socket, clients, number_section):
                         player_choice =  int(atual_player.recv(1024).decode('utf-8'))
                         clean_all_buffers(clients)
                         
+                        #Verificacao da escolha do Jogador
                         while (player_choice <= 0 or player_choice >= 6):
                             msg = "Opção incorreta!\n" + jogo.show_player_menu() + "Digite a sua opção: "
                             atual_player.sendall(msg.encode('utf-8'))
                             player_choice =  int(atual_player.recv(1024).decode('utf-8'))
                             clean_all_buffers(clients)
                             
+                        #Esolha para aumentar a aposta
                         if player_choice == 1:
                             msg = "Digite o valor a ser apostado:"
                             atual_player.sendall(msg.encode('utf-8'))
@@ -253,6 +320,9 @@ def game(section_socket, clients, number_section):
                                 jogo.current_value_setter(value)
                                 jogo.total_bets_setter(jogo.total_bets_getter() + value)
                                 jogo.check_bets_setter(False)
+                                
+                                jogador.raised_bet_setter(True)
+                                jogo.desactivate_all_raised_bet_except_one(jogador)
                                 
                                 #Informa os demais jogadores que o atual jogador aumentou a aposta
                                 msg = f"O jogador {jogador.name_getter()} aumentou a aposta para o valor de {value} fichas!\n"
@@ -265,6 +335,8 @@ def game(section_socket, clients, number_section):
                                 atual_player.sendall(msg.encode('utf-8'))
                                 clean_all_buffers(clients)
                                 
+                        
+                        #Escolha para igualar a maior aposta da mesa
                         elif player_choice == 2:
                             if jogador.call(jogo.current_value_getter()) == True:
                                 jogo.total_bets_setter(jogo.total_bets_getter() + jogo.current_value_getter())
@@ -281,6 +353,7 @@ def game(section_socket, clients, number_section):
                                 atual_player.sendall(msg.encode('utf-8'))
                                 clean_all_buffers(clients)
                                 
+                        #Escolha para desistir da rodada
                         elif player_choice == 3:
                             jogador.fold()
                             
@@ -291,6 +364,8 @@ def game(section_socket, clients, number_section):
                             
                             break
                         
+                        
+                        #Escolha apenas para passar a vez da aposta
                         elif player_choice == 4:
                             if jogador.check(jogo.current_value_getter()):
                             
@@ -304,6 +379,7 @@ def game(section_socket, clients, number_section):
                                 atual_player.sendall(msg.encode('utf-8'))
                                 clean_all_buffers(clients)
                         
+                        #Escolha para apostar todas as fichas na rodada
                         elif player_choice == 5:
                             if jogador.all_in(jogo.current_value_getter()) == True:
                                 jogo.current_value_setter(jogador.chips_getter())
@@ -322,10 +398,14 @@ def game(section_socket, clients, number_section):
                                 clean_all_buffers(clients)
                     #i += 1
                 
+                turn += 1
+                
+                #Confere quantos jogadores estao ativos na rodada
                 if jogo.verify_fold() == True:
                     q_players = False
                     break
                 
+                #Confere se todas as apostas foram feitas para que seja mostrada as cartas
                 if jogo.check_bets_getter() == True:
                     jogo.current_value_setter(0)
                     msg = jogo.print_table_cards(show_table_cards)
@@ -335,15 +415,17 @@ def game(section_socket, clients, number_section):
                     show_table_cards += 1
                     break
         
+        #Funcao que verifica os ganhadores da rodada e rotarna os ganhadores e quantidade
         winners, victory_count = jogo.victory_verification()
         
+        #Condicoes de vitoria em caso de um jogador e empate
         if victory_count == 1:
             msg = f"\nJogador {winners[0].name_getter()} venceu com um {winners[0].sequence_getter()} e ganhou {jogo.total_bets_getter()} fichas!"
             send_message_all(clients, msg)
             clean_all_buffers(clients)
             winners[0].chips_setter(winners[0].chips_getter() + jogo.total_bets_getter())
         elif victory_count > 1:
-            bet = jogo.total_bets_getter() / victory_count
+            bet = int(jogo.total_bets_getter() / victory_count)
                     
             msg = "Os players "
             for winner in winners:
@@ -372,7 +454,7 @@ def game(section_socket, clients, number_section):
             
             #Repostas do chefe de sala sobre a continuidade da partida
             
-            msg = "Deseja encerrar a seção do servidor(yes ou no)?"
+            msg = "Deseja encerrar a sessão do servidor(yes ou no)?"
             configer.sendall(msg.encode('utf-8'))
             choice =  configer.recv(1024).decode('utf-8')
             clean_all_buffers(clients)
@@ -388,7 +470,7 @@ def game(section_socket, clients, number_section):
                 
                 verify_new_players(clients, jogo, chips)
                 
-                confirm_next_round(clients, jogo)
+                confirm_next_round(clients, jogo, bigblind)
             
                 
                 jogo.total_bets_setter(0)
@@ -397,16 +479,18 @@ def game(section_socket, clients, number_section):
                 jogo.deck_setter(Deck())
                 jogo.clear_players()
                 
+                turn = 0
+                player_number = 0
                 
                 
-                if verify_valid_qtd_players(clients, jogo) == False:
+                if verify_valid_qtd_players(jogo) == False:
                     #play = False
                     msg = "Sem jogadores suficientes para começar outra mão\n\nO servidor está aguardando a entrada de novos jogadores para ter uma quantidade válida...\nPor favor, aguarde...\n"
                     send_message_all(clients, msg)
                     clean_all_buffers(clients) 
                     
                     #Aguarda outros jogadores entrarem para iniciar uma partida válida
-                    while verify_valid_qtd_players(clients, jogo) == False:
+                    while verify_valid_qtd_players(jogo) == False:
                         verify_new_players(clients, jogo, chips)
                         
                 circular_queue(jogo)
@@ -419,51 +503,6 @@ def game(section_socket, clients, number_section):
                 choice =  configer.recv(1024).decode('utf-8')
                 clean_all_buffers(clients)  
         
-        
-
-                   
-         
-def conexao(thread):
-    # Escutando informação do sistema
-    global turn
-
-    while True:
-        # Esperando receber algo
-        print("Esperando Mensagem do cliente...")
-        data = thread.sock.recv(1024).decode('utf-8')
-
-        if not data:
-            break
-
-        print(f"Mensagem recebida do cliente = {data}")
-
-        # Enviando a mensagem para os clientes conectados ao servidor
-        if 'quit' in data:
-            break
-        elif thread.thread_no == turn:
-            print("Enviando mensagem para os outros clientes")
-
-            with mutex:
-                for th in sockets_threads_ids:
-                    if th != -1 and th != thread.sock:
-                        th.sendall(data.encode('utf-8'))
-            if turn == 0:
-                turn = 1
-            else:
-                turn = 0
-        
-        # A mensagem possuía um quit, então finaliza a conexão do cliente com esse servidor
-        else:
-            data = "Não é sua vez de jogar"
-            sockets_threads_ids[thread.thread_no].sendall(data.encode('utf-8'))
-
-    with mutex:
-        sockets_threads_ids[thread.thread_no] = -1
-
-    print("Fechando a conexão...")
-    thread.sock.shutdown(socket.SHUT_RDWR)
-    thread.sock.close()
-
 if __name__ == "__main__":
     # Configurando um socket para aceitar IPv4 (AF_INET) e settando o tipo do socket para TCP
     #Um socket associado a cada thread
@@ -473,16 +512,15 @@ if __name__ == "__main__":
     section_2_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     section_3_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Atualizado: Use 0.0.0.0 para permitir conexões de qualquer endereço
-    #Uma porta para cada seção
+    #0.0.0.0 para permitir conexões de qualquer endereço
+    #Uma porta para cada sessão
     server_addr = ('0.0.0.0', 5050)
     
     section_1_addr = ('0.0.0.0', 9879)
     section_2_addr = ('0.0.0.0', 9880)
     section_3_addr = ('0.0.0.0', 9881)
 
-    # Vinculando o endereço do servidor e a porta ao socket
-    #Vinculando o endereço e porta de cada seção ao socket respectivo
+    #Vinculando o endereço e porta de cada sessão ao socket respectivo da sessão
     main_socket.bind(server_addr)
     
     section_1_socket.bind(section_1_addr)
@@ -491,16 +529,16 @@ if __name__ == "__main__":
 
     threads = []
     
-    #Iniciando as threads que gerenciarão cada seção
-    section_1 = threading.Thread(target=game, args=(section_1_socket, clients_section_1, "1"))
+    #Iniciando as threads que gerenciarão cada sessão
+    section_1 = threading.Thread(target=game, args=(section_1_socket, clients_section_1, "1", 50, 100))
     section_1.start()
     threads.append(section_1)
     
-    section_2 = threading.Thread(target=game, args=(section_2_socket, clients_section_2, "2"))
+    section_2 = threading.Thread(target=game, args=(section_2_socket, clients_section_2, "2", 100, 200))
     section_2.start()
     threads.append(section_2)
     
-    section_3 = threading.Thread(target=game, args=(section_3_socket, clients_section_3, "3"))
+    section_3 = threading.Thread(target=game, args=(section_3_socket, clients_section_3, "3", 200, 400))
     section_3.start()
     threads.append(section_3)
     
