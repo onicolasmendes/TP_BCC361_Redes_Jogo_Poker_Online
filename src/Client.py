@@ -51,12 +51,15 @@ if __name__ == "__main__":
     #Configurando um socket com IPv4 e TCP
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+    #Endereço do servidor
+    address = "localhost"
     
     # Conectando com o servidor - Cada sessão irá operar em uma porta diferente do servidor
-    section_1_addr = ("localhost", 9879)
-    section_2_addr = ("localhost", 9880)
-    section_3_addr = ("localhost", 9881)
+    section_1_addr = (address, 9879)
+    section_2_addr = (address, 9880)
+    section_3_addr = (address, 9881)
 
+    print(f"\n==============================================================================================\nBem-vindo(a) ao Servidor de Poker (Endereço: {address})!\n==============================================================================================\n\n")
     #Cliente escolhe a sessão que quer jogar
     while True:
         choice = input("\n==============================================================================================\nSessões ativas no servidor:\n\nSESSÃO 1 - Poker Texas Hold'em - Blind 50/100 - Máximo de 8 jogadores - Status: Online\nSESSÃO 2 - Poker Texas Hold'em - Blind 100/200 - Máximo de 8 jogadores - Status: Online\nSESSÃO 3 - Poker Texas Hold'em - Blind 200/400 - Máximo de 8 jogadores - Status: Online\n==============================================================================================\n\nQual sessão você deseja entrar (1-2-3):")
