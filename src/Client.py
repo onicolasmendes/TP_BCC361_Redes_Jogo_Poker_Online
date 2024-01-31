@@ -76,12 +76,12 @@ if __name__ == "__main__":
             print("Opção inválida!!! Digite uma sessão ativa no servidor!\n")
 
     #Abre as threads que enviam e recebem mensagem do servidor
-    print("Criando thread recv...")
+    
     data_recv = ThreadData(client_socket, None)
     thread_recv_id = threading.Thread(target=threadRecv, args=(data_recv,))
     thread_recv_id.start()
 
-    print("Criando thread send...")
+    
     data_send = ThreadData(client_socket, thread_recv_id)
     thread_send_id = threading.Thread(target=threadSend, args=(data_send,))
     thread_send_id.start()

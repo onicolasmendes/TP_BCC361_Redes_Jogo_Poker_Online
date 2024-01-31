@@ -332,7 +332,7 @@ class Jogo:#Classe Jogo
         list_points.reverse()
 
         victory_count = list_points.count(players[0].card_points_getter())
-
+         
         winners = []
         for i in range(victory_count):
             winners.append(players[i])

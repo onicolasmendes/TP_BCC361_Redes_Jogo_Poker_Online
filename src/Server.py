@@ -204,7 +204,6 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
     #Configurando parâmetros iniciais do jogo
     #Fichas iniciais
     players = []
-    configer = clients[0]
     
     chips = 10000
     
@@ -393,7 +392,6 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                                 msg = "Ação Inválida - Suas fichas disponíveis são menores que a atual aposta da rodada\n"
                                 atual_player.sendall(msg.encode('utf-8'))
                                 clean_all_buffers(clients)
-                    #i += 1
                 
                 turn += 1
                 
@@ -444,62 +442,42 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
         send_message_all(clients, msg)
         clean_all_buffers(clients)           
         
-        while True:
-            configer = define_round_chief(clients, jogo)
-            #Informando os outros jogadores que o chefe de sala está decidindo sobre a continuidade da partida
-            msg = f"Aguarde enquanto o SmallBlind ({players[0].name_getter()}) decide se a partida continuará ou não!\n"
-            send_message_all_except_one(clients, configer, msg)
-            clean_all_buffers(clients)
             
-            #Repostas do chefe de sala sobre a continuidade da partida
-            
-            msg = "Deseja encerrar a sessão do servidor(yes ou no)?"
-            configer.sendall(msg.encode('utf-8'))
-            choice =  configer.recv(1024).decode('utf-8')
-            clean_all_buffers(clients)
-            
-            choice = choice.upper()
-            if choice == "YES":
-                play = False
-                break
-            elif choice == "NO":
-                msg = "O servidor está verificando e colhendo informações sobre os novos jogadores para entrar na partida\n"
-                send_message_all(clients, msg)
-                clean_all_buffers(clients)
+        #Tratando os novos jogadores que se contaram durante uma partida
+        msg = "O servidor está verificando e colhendo informações sobre os novos jogadores para entrar na partida\n"
+        send_message_all(clients, msg)
+        clean_all_buffers(clients)
                 
-                verify_new_players(clients, jogo, chips)
+        verify_new_players(clients, jogo, chips)
                 
-                confirm_next_round(clients, jogo, bigblind)
+        #Verificando quais players desejam participar da próxima rodada
+        confirm_next_round(clients, jogo, bigblind)
                 
-                jogo.total_bets_setter(0)
-                jogo.current_value_setter(0)
-                jogo.table_cards_getter().clear()
-                jogo.deck_setter(Deck())
-                jogo.clear_players()
+        #Resetando todas as variáveis e objetos para iniciar uma nova rodada
+        jogo.total_bets_setter(0)
+        jogo.current_value_setter(0)
+        jogo.table_cards_getter().clear()
+        jogo.deck_setter(Deck())
+        jogo.clear_players()
                 
-                turn = 0
-                player_number = 0
+        turn = 0
+        player_number = 0
                 
-                
-                if verify_valid_qtd_players(jogo) == False:
-                    #play = False
-                    msg = "Sem jogadores suficientes para começar outra mão\n\nO servidor está aguardando a entrada de novos jogadores para ter uma quantidade válida...\nPor favor, aguarde...\n"
-                    send_message_all(clients, msg)
-                    clean_all_buffers(clients) 
+        #Verifica se há a quantidade mínima de jogadores para iniciar uma nova rodada   
+        if verify_valid_qtd_players(jogo) == False:
+            msg = "Sem jogadores suficientes para começar outra mão\n\nO servidor está aguardando a entrada de novos jogadores para ter uma quantidade válida...\nPor favor, aguarde...\n"
+            send_message_all(clients, msg)
+            clean_all_buffers(clients) 
                     
-                    #Aguarda outros jogadores entrarem para iniciar uma partida válida
-                    while verify_valid_qtd_players(jogo) == False:
-                        verify_new_players(clients, jogo, chips)
-                        
-                circular_queue(jogo)
+            #Aguarda outros jogadores entrarem para iniciar uma partida válida
+            while verify_valid_qtd_players(jogo) == False:
+                verify_new_players(clients, jogo, chips)
+            
+        #Atualiza a fila circular para que a vez na mesa rode            
+        circular_queue(jogo)
                 
-                break
-            else:
-                configer = define_round_chief(clients, jogo)
-                msg = "Opcao Invalida!"  
-                configer.sendall(msg.encode('utf-8'))
-                choice =  configer.recv(1024).decode('utf-8')
-                clean_all_buffers(clients)  
+            
+             
         
 if __name__ == "__main__":
     # Configurando um socket para aceitar IPv4 (AF_INET) e settando o tipo do socket para TCP
