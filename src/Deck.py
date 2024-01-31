@@ -34,20 +34,3 @@ class Deck: #Classe que representa o baralho
     
     def cards_getter(self):
         return self._cards
-    
-
-if __name__ == '__main__':
-    deck = Deck()
-    
-    deck.shuffle()
-    
-    print(len(deck.cards_getter()))
-    for card in deck.cards_getter():
-        print(card.value_getter())
-        print(card.suit_getter())
-
-    list_1 = sorted(deck.cards_getter(), key=lambda card: card.value_getter())
-
-    for card in list_1:
-        print(card.value_getter())
-        print(card.suit_getter())

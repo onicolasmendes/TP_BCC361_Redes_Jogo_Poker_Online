@@ -20,8 +20,3 @@ class Card:
     #Value setter
     def value_setter(self, value):
         self._value = value
-        
-    
-
-if __name__ == '__main__':
-    card = Card("A", 12)
