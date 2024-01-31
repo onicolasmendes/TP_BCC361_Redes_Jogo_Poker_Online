@@ -227,7 +227,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
     while play:
         send_message_all(clients, "Embaralhando as cartas...\n")
         clean_all_buffers(clients)
-        msg = f"=================================================================\nInformações sobre a sessão:\nFichas iniciais de todos os players = {chips} fichas\nBlind = {smallblind}/{bigblind}\n=================================================================\n"
+        msg = f"=================================================================\nInformações sobre a sessão:\nFichas iniciais de todos os players = {chips} fichas\nStakes = {smallblind}/{bigblind}\n=================================================================\n"
         send_message_all(clients, msg)
         clean_all_buffers(clients)
         jogo.distribute_cards()
@@ -238,7 +238,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
         
         show_table_cards = 3
         q_players = True
-        while(show_table_cards <= 5 and q_players):
+        while(show_table_cards <= 6 and q_players):
             while True:
                 #BET TIME
                 
@@ -251,10 +251,6 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                     if jogador.fold_getter() == True:
                         continue
                     
-                    #Iniciou uma nova roda e desativa o atributo que verifica se alguém aumentou a aposta
-                    if jogo.current_value_getter() == 0:
-                        jogo.desactivate_all_raised_bet()
-                    
                     #Aposta inicial do smallblind
                     if turn == 0  and player_number == 0:
                         jogador.chips_setter(jogador.chips_getter() - smallblind)
@@ -266,9 +262,6 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                         player_number += 1
                         continue
                     
-                    #Pula o jogador que aumentou a aposta na ultima rodada
-                    if jogador.raised_bet_getter() == True:
-                        continue
                     
                     #Aposta inicial do bigblind   
                     if turn == 0 and player_number == 1:
@@ -282,10 +275,13 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                         
                         player_number += 1
                         continue
+                    
+                    #Pula o jogaor que aumentou a maior aposta ou a pagou
+                    if jogador.atual_bet_getter() == jogo.current_value_getter() and jogo.current_value_getter() != 0:
+                        continue
                         
                     
                     #Avisa os demais jogadores qual jogador está fazendo a jogada
-                    #atual_player = clients[i]
                     atual_player = define_actual_player(clients, jogador)
                     msg = f"O jogador {jogador.name_getter()} está fazendo a sua jogada. Aguarde a sua vez!\n"
                     send_message_all_except_one(clients, atual_player, msg)
@@ -319,10 +315,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                             if jogador.raise_bet(value, jogo.current_value_getter()) == True:
                                 jogo.current_value_setter(value)
                                 jogo.total_bets_setter(jogo.total_bets_getter() + value)
-                                jogo.check_bets_setter(False)
-                                
-                                jogador.raised_bet_setter(True)
-                                jogo.desactivate_all_raised_bet_except_one(jogador)
+                                jogador.atual_bet_setter(value)
                                 
                                 #Informa os demais jogadores que o atual jogador aumentou a aposta
                                 msg = f"O jogador {jogador.name_getter()} aumentou a aposta para o valor de {value} fichas!\n"
@@ -340,7 +333,8 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                         elif player_choice == 2:
                             if jogador.call(jogo.current_value_getter()) == True:
                                 jogo.total_bets_setter(jogo.total_bets_getter() + jogo.current_value_getter())
-                                jogo.check_bets_setter(True)
+                                jogador.atual_bet_setter(jogo.current_value_getter())
+                                
                                 
                                 #Informa os demais jogadores que o atual jogador deu um call
                                 msg = f"O jogador {jogador.name_getter()} igualou a aposta (call) de {jogo.current_value_getter()} fichas!\n"
@@ -375,7 +369,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                                 clean_all_buffers(clients)
                                 break
                             else:
-                                msg = "Ação Inválida - Você não pode dar check com um valor válido de aposta na mesa!\n"
+                                msg = "Ação Inválida - Você não pode dar check com um valor válido de aposta na mesa (!= 0)!\n"
                                 atual_player.sendall(msg.encode('utf-8'))
                                 clean_all_buffers(clients)
                         
@@ -385,6 +379,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                                 jogo.current_value_setter(jogador.chips_getter())
                                 jogo.total_bets_setter(jogo.total_bets_getter()+ jogo.current_value_getter())
                                 jogador.chips_setter(0)
+                                jogador.atual_bet_setter(jogo.current_value_getter())
                                 
                                 #Informa os demais jogadores que o atual jogador deu um allin
                                 msg = f"O jogador {jogador.name_getter()} deu um allin! Apostou {jogo.current_value_getter()} fichas!\n"
@@ -406,12 +401,14 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                     break
                 
                 #Confere se todas as apostas foram feitas para que seja mostrada as cartas
-                if jogo.check_bets_getter() == True:
+                if jogo.verify_equal_all_bets() == True:
                     jogo.current_value_setter(0)
-                    msg = jogo.print_table_cards(show_table_cards)
-                    for client in clients:
-                        client.sendall(msg.encode('utf-8'))
-                        clean_all_buffers(clients)
+                    jogo.reset_all_atual_bet()
+                    if show_table_cards <= 5:
+                        msg = jogo.print_table_cards(show_table_cards)
+                        for client in clients:
+                            client.sendall(msg.encode('utf-8'))
+                            clean_all_buffers(clients)
                     show_table_cards += 1
                     break
         
@@ -448,7 +445,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
         while True:
             configer = define_round_chief(clients, jogo)
             #Informando os outros jogadores que o chefe de sala está decidindo sobre a continuidade da partida
-            msg = f"Aguarde enquanto o chefe de sala ({players[0].name_getter()}) decide se a partida continuará ou não!\n"
+            msg = f"Aguarde enquanto o SmallBlind ({players[0].name_getter()}) decide se a partida continuará ou não!\n"
             send_message_all_except_one(clients, configer, msg)
             clean_all_buffers(clients)
             
@@ -505,8 +502,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
 if __name__ == "__main__":
     # Configurando um socket para aceitar IPv4 (AF_INET) e settando o tipo do socket para TCP
     #Um socket associado a cada thread
-  
-    
+ 
     section_1_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     section_2_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     section_3_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

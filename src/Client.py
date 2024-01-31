@@ -62,7 +62,7 @@ if __name__ == "__main__":
     print(f"\n==============================================================================================\nBem-vindo(a) ao Servidor de Poker (Endereço: {address})!\n==============================================================================================\n\n")
     #Cliente escolhe a sessão que quer jogar
     while True:
-        choice = input("\n==============================================================================================\nSessões ativas no servidor:\n\nSESSÃO 1 - Poker Texas Hold'em - Blind 50/100 - Máximo de 8 jogadores - Status: Online\nSESSÃO 2 - Poker Texas Hold'em - Blind 100/200 - Máximo de 8 jogadores - Status: Online\nSESSÃO 3 - Poker Texas Hold'em - Blind 200/400 - Máximo de 8 jogadores - Status: Online\n==============================================================================================\n\nQual sessão você deseja entrar (1-2-3):")
+        choice = input("\n==============================================================================================\nSessões ativas no servidor:\n\nSESSÃO 1 - Poker Texas Hold'em - Stakes 50/100 - Máximo de 8 jogadores - Status: Online\nSESSÃO 2 - Poker Texas Hold'em - Stakes 100/200 - Máximo de 8 jogadores - Status: Online\nSESSÃO 3 - Poker Texas Hold'em - Stakes 200/400 - Máximo de 8 jogadores - Status: Online\n==============================================================================================\n\nQual sessão você deseja entrar (1-2-3):")
         if choice == "1":
             client_socket.connect(section_1_addr)
             break

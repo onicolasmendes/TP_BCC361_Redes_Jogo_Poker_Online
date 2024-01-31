@@ -51,10 +51,17 @@ class Jogo:#Classe Jogo
     def players_getter(self):
         return self._jogadores
 
-    def desactivate_all_raised_bet_except_one(self, jogador):
-        for player in self._jogadores:
-            if player != jogador:
-                player.raised_bet_setter(False)
+    def verify_equal_all_bets(self):
+        for jogador in self._jogadores:
+            if jogador.fold_getter() == True:
+                continue
+            if jogador.atual_bet_getter() != self._current_value:
+                return False
+        return True
+    
+    def reset_all_atual_bet(self):
+        for jogador in self._jogadores:
+            jogador.atual_bet_setter(0)
             
     def players_setter(self, jogadores):
         self._jogadores = jogadores
@@ -352,8 +359,8 @@ class Jogo:#Classe Jogo
     def clear_players(self):
         for jogador in self._jogadores:
             jogador._cards.clear()
-            jogador.raised_bet_setter(False)
             jogador.chipsbet_setter(0)
+            jogador.atual_bet_setter(0)
             if jogador.chips_getter() != 0:
                 jogador.fold_setter(False)
             else:
@@ -369,9 +376,6 @@ class Jogo:#Classe Jogo
         if active == 1:
             return True
 
-    def desactivate_all_raised_bet(self):
-        for jogador in self._jogadores:
-            jogador.raised_bet_setter(False)
                 
     def verify_number_valid_players(self):
         valid_players = 0

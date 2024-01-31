@@ -9,15 +9,15 @@ class Jogador: #Classe Jogador
         self._card_points = 0 #Atributo para os pontos das cartas do jogador
         self._sequence = "" #Atributo para a sequencia do jogador
         self._socket = socket #Atributo para o socket do jogador
-        self._raised_bet = False #Atributo para checar se o jogador aumentou a aposta
+        self._atual_bet = 0 #Atributo referente a aposta do jogador na rodada corrente
     
     #Getters e Setters para conferir o estado de aumentar a aposta
-    def raised_bet_setter(self, raised_bet):
-        self._raised_bet = raised_bet
     
-    def raised_bet_getter(self):
-        return self._raised_bet
+    def atual_bet_getter(self):
+        return self._atual_bet
     
+    def atual_bet_setter(self, value):
+        self._atual_bet = value
     
     #Instacia para comparacao da classe Jogador
     def __eq__(self, outro_objeto):
