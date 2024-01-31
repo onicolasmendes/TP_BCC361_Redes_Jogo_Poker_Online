@@ -255,6 +255,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                     if turn == 0  and player_number == 0:
                         jogador.chips_setter(jogador.chips_getter() - smallblind)
                         jogo.total_bets_setter(jogo.total_bets_getter() + smallblind)
+                        jogador.atual_bet_setter(smallblind)
                         
                         msg = f"O jogador {jogador.name_getter()} (SmallBlind) fez a aposta obrigatória de {smallblind} fichas!\n"
                         send_message_all(clients, msg)
@@ -268,6 +269,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                         jogador.chips_setter(jogador.chips_getter() - bigblind)
                         jogo.current_value_setter(bigblind)
                         jogo.total_bets_setter(jogo.total_bets_getter() + bigblind)
+                        jogador.atual_bet_setter(bigblind)
                         
                         msg = f"O jogador {jogador.name_getter()} (BigBlind) fez a aposta obrigatória de {bigblind} fichas!\n"
                         send_message_all(clients, msg)
