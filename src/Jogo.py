@@ -101,8 +101,30 @@ class Jogo:#Classe Jogo
     def add_player(self, player):
         self._jogadores.append(player)   
     
+    #Atualiza o número de vitórias do jogador vencedor
+    def update_victories(self, winners):
+        for winner in winners:
+            for jogador in self._jogadores:
+                if winner == jogador:
+                    jogador.victories_setter(jogador.victories_getter() + 1)
+
+    #Atualiza o número de derrotas dos jogadores vencedores
+    def update_defeats(self, winners):
+        for jogador in self._jogadores:
+            is_winner = 0
+            for winner in winners:
+                if jogador == winner:
+                    is_winner += 1
+            if is_winner == 0:
+                jogador.defeats_setter(jogador.defeats_getter() + 1)
     
-    
+    #Atualiza o número de empates dos jogadores que empataram
+    def update_draws(self, draws):
+        for draw in draws:
+            for jogador in self._jogadores:
+                if draw == jogador:
+                    jogador.draws_setter(jogador.draws_getter() + 1)   
+                         
     def poker_sequences(self, player_cards):
         
         cards = self._table_cards + player_cards

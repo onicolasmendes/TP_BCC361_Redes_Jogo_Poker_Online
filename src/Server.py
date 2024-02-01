@@ -103,9 +103,13 @@ def define_round_chief(clients, jogo):
             if client == jogador.socket_getter():
                 return client
                  
-            
+def search_player(client, jogo):
+    for jogador in jogo.players_getter():
+        if jogador.socket_getter() == client:
+            return jogador
+                  
 #Confirma o proximo round de cada jogador e fica aguardando a resposta de todos os jogadores
-def confirm_next_round(clients, jogo, bigblind):
+def confirm_next_round(clients, jogo, bigblind, number_section):
     msg = "Aguardando a confirmação de todos os players para inicio da próxima rodada...\n"
     send_message_all(clients, msg)
     clean_all_buffers(clients)
@@ -155,13 +159,22 @@ def confirm_next_round(clients, jogo, bigblind):
     for client in clients_will_be_removed:
         clients.remove(client)
         
+        player = search_player(client, jogo)
+        
+        #Informa o player sobre as suas estatísticas individuais na sessão referente
+        msg = f"\n=================================================================\nSuas estatísticas durante a(s) partida(s) na sessão {number_section}!\nVitórias = {player.victories_getter()}\nEmpates = {player.draws_getter()}\nDerrotas = {player.defeats_getter()}\n=================================================================\n\n"
+        client.sendall(msg.encode('utf-8'))
+        clean_all_buffers(clients)
+        
+        #Envia a mensagem que desconecta o cliente do servidor
         msg = "sair"  
         client.sendall(msg.encode('utf-8'))
         clean_all_buffers(clients)
         
     for jogador in jogadores_will_be_removed:
         jogo.remove_player(jogador)
-                     
+  
+                   
 #Verifica a quantidade de players validos na partida
 def verify_valid_qtd_players(jogo):
     if len(jogo.players_getter()) <= 1:
@@ -437,6 +450,11 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
             send_message_all(clients, msg)
             clean_all_buffers(clients)
             winners[0].chips_setter(winners[0].chips_getter() + jogo.total_bets_getter())
+            
+            #Atualiza as estatísticas
+            jogo.update_victories(winners)
+            jogo.update_defeats(winners)
+            
         elif victory_count > 1:
             bet = int(jogo.total_bets_getter() / victory_count)
                     
@@ -448,6 +466,10 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
             msg = msg + f"empataram com um {winners[0].sequence_getter()} e cada um ganhou {bet} fichas!\n"
             send_message_all(clients, msg)
             clean_all_buffers(clients)
+            
+            #Atualiza as estatísticas
+            jogo.update_draws(winners)
+            jogo.update_defeats(winners)
 
         msg = "Sequencia de todos os Jogadores:\n"
         for jogador in jogo.players_getter():
@@ -467,7 +489,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
         verify_new_players(clients, jogo, chips)
                 
         #Verificando quais players desejam participar da próxima rodada
-        confirm_next_round(clients, jogo, bigblind)
+        confirm_next_round(clients, jogo, bigblind, number_section)
                 
         #Resetando todas as variáveis e objetos para iniciar uma nova rodada
         jogo.total_bets_setter(0)

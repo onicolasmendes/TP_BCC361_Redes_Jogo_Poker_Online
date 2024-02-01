@@ -10,8 +10,29 @@ class Jogador: #Classe Jogador
         self._sequence = "" #Atributo para a sequencia do jogador
         self._socket = socket #Atributo para o socket do jogador
         self._atual_bet = 0 #Atributo referente a aposta do jogador na rodada corrente
+        self._victories = 0 #Atributo para a quantidade de vitórias na sessão
+        self._defeats = 0 #Atributo para a quantidade de derrotas na sessão
+        self._draws = 0 #Atributo para a quantidade de empates na sessão
     
     #Getters e Setters para conferir o estado de aumentar a aposta
+    
+    def victories_getter(self):
+        return self._victories
+    
+    def victories_setter(self, value):
+        self._victories = value
+        
+    def defeats_getter(self):
+        return self._defeats
+    
+    def defeats_setter(self, value):
+        self._defeats = value
+        
+    def draws_getter(self):
+        return self._draws
+    
+    def draws_setter(self, value):
+        self._draws = value
     
     def atual_bet_getter(self):
         return self._atual_bet
