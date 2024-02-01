@@ -224,6 +224,10 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
     #Execução do jogo
     play = True
     while play:
+        
+        #Início da medição do tempo da partida
+        start_time = time.time()
+        
         send_message_all(clients, "Embaralhando as cartas...\n")
         clean_all_buffers(clients)
         msg = f"=================================================================\nInformações sobre a sessão:\nFichas iniciais de todos os players = {chips} fichas\nStakes = {smallblind}/{bigblind}\n=================================================================\n"
@@ -412,6 +416,18 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                     show_table_cards += 1
                     break
         
+        #Termina a medição do tempo
+        end_time = time.time()
+        elapsed_time_seconds = end_time - start_time
+        elapsed_time_minutes = int(elapsed_time_seconds // 60)
+        elapsed_time_seconds %= 60
+        elapsed_time_seconds = int(elapsed_time_seconds)
+        
+        msg = f"\nDuração da partida: {elapsed_time_minutes} minuto(s) e {elapsed_time_seconds} segundo(s)\n"
+        send_message_all(clients, msg)
+        clean_all_buffers(clients)
+        
+        
         #Funcao que verifica os ganhadores da rodada e rotarna os ganhadores e quantidade
         winners, victory_count = jogo.victory_verification()
         
@@ -515,7 +531,7 @@ if __name__ == "__main__":
     section_3.start()
     threads.append(section_3)
     
-    print("Abriu todas as secoes/threads")
+    print("Abriu todas as sessões/threads")
     
     #Esperando todas as seções serem finalizadas
     for thread in threads:
