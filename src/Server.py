@@ -275,6 +275,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                         jogador.chips_setter(jogador.chips_getter() - smallblind)
                         jogo.total_bets_setter(jogo.total_bets_getter() + smallblind)
                         jogador.atual_bet_setter(smallblind)
+                        jogador.chipsbet_setter(smallblind)
                         
                         msg = f"O jogador {jogador.name_getter()} (SmallBlind) fez a aposta obrigatória de {smallblind} fichas!\n"
                         send_message_all(clients, msg)
@@ -289,6 +290,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                         jogo.current_value_setter(bigblind)
                         jogo.total_bets_setter(jogo.total_bets_getter() + bigblind)
                         jogador.atual_bet_setter(bigblind)
+                        jogador.chipsbet_setter(bigblind)
                         
                         msg = f"O jogador {jogador.name_getter()} (BigBlind) fez a aposta obrigatória de {bigblind} fichas!\n"
                         send_message_all(clients, msg)
@@ -335,7 +337,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                             
                             if jogador.raise_bet(value, jogo.current_value_getter()) == True:
                                 jogo.current_value_setter(value)
-                                jogo.total_bets_setter(jogo.total_bets_getter() + value)
+                                jogo.total_bets_setter(jogo.total_bets_getter() + (value - jogador.atual_bet_getter()))
                                 jogador.atual_bet_setter(value)
                                 
                                 #Informa os demais jogadores que o atual jogador aumentou a aposta
@@ -353,7 +355,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                         #Escolha para igualar a maior aposta da mesa
                         elif player_choice == 2:
                             if jogador.call(jogo.current_value_getter()) == True:
-                                jogo.total_bets_setter(jogo.total_bets_getter() + jogo.current_value_getter())
+                                jogo.total_bets_setter(jogo.total_bets_getter() + (jogo.current_value_getter() - jogador.atual_bet_getter()))
                                 jogador.atual_bet_setter(jogo.current_value_getter())
                                 
                                 
@@ -396,20 +398,29 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                         
                         #Escolha para apostar todas as fichas na rodada
                         elif player_choice == 5:
-                            if jogador.all_in(jogo.current_value_getter()) == True:
-                                jogo.current_value_setter(jogador.chips_getter())
-                                jogo.total_bets_setter(jogo.total_bets_getter()+ jogo.current_value_getter())
+                            if jogador.all_in() == True:
+                                
+                                jogo.total_bets_setter(jogo.total_bets_getter() + jogador.chips_getter())
+                                
+                                if jogo.current_value_getter() <  jogador.chips_getter():
+                                    jogo.current_value_setter(jogador.chips_getter())
+                                    
+                                jogador.atual_bet_setter(jogador.chips_getter())             
+                                value = jogador.chips_getter()
+                                
                                 jogador.chips_setter(0)
-                                jogador.atual_bet_setter(jogo.current_value_getter())
+                                
+                                
+                                jogador.all_in_setter(True)
                                 
                                 #Informa os demais jogadores que o atual jogador deu um allin
-                                msg = f"O jogador {jogador.name_getter()} deu um allin! Apostou {jogo.current_value_getter()} fichas!\n"
+                                msg = f"O jogador {jogador.name_getter()} deu um allin! Apostou {value} fichas!\n"
                                 send_message_all_except_one(clients, atual_player, msg)
                                 clean_all_buffers(clients)
                                 
                                 break
                             else:
-                                msg = "Ação Inválida - Suas fichas disponíveis são menores que a atual aposta da rodada\n"
+                                msg = "Ação Inválida - Você não pode dar all-in\n"
                                 atual_player.sendall(msg.encode('utf-8'))
                                 clean_all_buffers(clients)
                 
@@ -424,6 +435,7 @@ def game(section_socket, clients, number_section, smallblind, bigblind):
                 if jogo.verify_equal_all_bets() == True:
                     jogo.current_value_setter(0)
                     jogo.reset_all_atual_bet()
+                    jogo.reset_chipsbet()
                     if show_table_cards <= 5:
                         msg = jogo.print_table_cards(show_table_cards)
                         for client in clients:

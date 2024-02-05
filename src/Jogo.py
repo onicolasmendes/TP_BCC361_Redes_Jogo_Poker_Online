@@ -73,6 +73,8 @@ class Jogo:#Classe Jogo
         for jogador in self._jogadores:
             if jogador.fold_getter() == True:
                 continue
+            if jogador.all_in_getter() == True:
+                continue
             if jogador.atual_bet_getter() != self._current_value:
                 return False
         return True
@@ -343,6 +345,7 @@ class Jogo:#Classe Jogo
         for jogador in self._jogadores:
             jogador._cards.clear()
             jogador.chipsbet_setter(0)
+            jogador.all_in_setter(False)
             jogador.atual_bet_setter(0)
             if jogador.chips_getter() != 0:
                 jogador.fold_setter(False)
@@ -360,7 +363,10 @@ class Jogo:#Classe Jogo
         if active == 1:
             return True
 
-                
+    def reset_chipsbet(self):
+        for jogador in self._jogadores:
+            jogador.chipsbet_setter(0)
+                     
     #metodo que verifica a quantidade de players validos no jogo 
     def verify_number_valid_players(self):
         valid_players = 0

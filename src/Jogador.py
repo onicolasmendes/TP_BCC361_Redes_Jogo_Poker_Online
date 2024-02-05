@@ -13,6 +13,7 @@ class Jogador: #Classe Jogador
         self._victories = 0 #Atributo para a quantidade de vitórias na sessão
         self._defeats = 0 #Atributo para a quantidade de derrotas na sessão
         self._draws = 0 #Atributo para a quantidade de empates na sessão
+        self._all_in = False 
     
     #Getters e Setters para o ranking de vitorias,derrotas e empates no jogo
     
@@ -34,6 +35,11 @@ class Jogador: #Classe Jogador
     def draws_setter(self, value):
         self._draws = value
     
+    def all_in_getter(self):
+        return self._all_in
+    
+    def all_in_setter(self, value):
+        self._all_in = value
     
     #Getters e Setters para conferir o estado de aumentar a aposta
     def atual_bet_getter(self):
@@ -120,8 +126,8 @@ class Jogador: #Classe Jogador
     #Metodo para igualar a aposta da mesa
     def call(self, current_bet):
         if current_bet <= self._chips and current_bet != 0:
-            self._chipsbet += current_bet
-            self._chips -= current_bet
+            self._chips -= (current_bet - self._chipsbet)
+            self._chipsbet += (current_bet - self._chipsbet)
             return True
         return False
             
@@ -133,15 +139,16 @@ class Jogador: #Classe Jogador
     #Metodo para aumentar a aposta da mesa
     def raise_bet(self, value, current_bet):
         if value <= self._chips and value > current_bet:
-            self._chipsbet += value 
-            self._chips -= value
+            self._chips -= (value - self._chipsbet)
+            self._chipsbet += (value - self._chipsbet) 
+        
             return True
         return False
     
     
     #Metodo para apostar todas as fichas
-    def all_in(self, current_value):
-        if current_value <= self._chips:
+    def all_in(self):
+        if self._chips != 0:
             self._chipsbet += self._chips
             return True
         return False
@@ -149,7 +156,7 @@ class Jogador: #Classe Jogador
     
     #Metodo para apenas passar a vez na rodada
     def check(self, value):
-        if value == 0:
+        if value == 0 or self._chips == 0:
             self._check = True
             return True
         return False
