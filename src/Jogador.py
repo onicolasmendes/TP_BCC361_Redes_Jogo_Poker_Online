@@ -14,7 +14,7 @@ class Jogador: #Classe Jogador
         self._defeats = 0 #Atributo para a quantidade de derrotas na sessão
         self._draws = 0 #Atributo para a quantidade de empates na sessão
     
-    #Getters e Setters para conferir o estado de aumentar a aposta
+    #Getters e Setters para o ranking de vitorias,derrotas e empates no jogo
     
     def victories_getter(self):
         return self._victories
@@ -34,6 +34,8 @@ class Jogador: #Classe Jogador
     def draws_setter(self, value):
         self._draws = value
     
+    
+    #Getters e Setters para conferir o estado de aumentar a aposta
     def atual_bet_getter(self):
         return self._atual_bet
     

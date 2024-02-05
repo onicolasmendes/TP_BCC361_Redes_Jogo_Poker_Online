@@ -1,6 +1,7 @@
 from itertools import combinations
 from collections import Counter
 
+#Funcao para gerar combinacoes das cartas do jogador com as cartas da mesa
 def generate_combinations(cards, number):
         real_sequences = []
         total_sequences = combinations(cards, number)
@@ -9,12 +10,15 @@ def generate_combinations(cards, number):
             real_sequences.append(sequence)
         return real_sequences
         
+
+#Funcao para a verificacao do Royal Flush
 def verify_royal_flush(sequence):
     royal_flush = [10, 11, 12, 13, 14]
     if sequence == royal_flush:
         return True
     return False
 
+#Funcao para a verificacao do Straight Flush
 def verify_straight_flush(sequence):
     straight_flush = [[2,3,4,5,6], [3,4,5,6,7], [4,5,6,7,8], [5,6,7,8,9], [6,7,8,9,10], [7,8,9,10,11], [8,9,10,11,12], [9,10,11,12,13]]
     for sequence_ in straight_flush:
@@ -22,6 +26,7 @@ def verify_straight_flush(sequence):
             return True
     return False   
 
+#funcao para gerar combinacoes de cartas de mesmo naipe e retornar uma lista com as combinacoes
 def generate_all_combinations(hearts, spades, diamonds, clubs, number):
     hearts_cards = generate_combinations(hearts,number)
     spades_cards = generate_combinations(spades,number)
@@ -33,6 +38,7 @@ def generate_all_combinations(hearts, spades, diamonds, clubs, number):
       
     return total_sequences
 
+#Funcao que separa as cartas do jogador atraves do naipe
 def separate_cards_by_suit(hearts, spades, diamonds, clubs, cards):
   for card in cards:
         if card.suit_getter() == "♡":
@@ -46,6 +52,7 @@ def separate_cards_by_suit(hearts, spades, diamonds, clubs, cards):
 
 
 
+#Funcao para separar as cartas do jogaodr por numero
 def separate_cards_by_number(two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen, cards):
     for card in cards:
         if card.value_getter() == 2:
@@ -77,6 +84,7 @@ def separate_cards_by_number(two, three, four, five, six, seven, eight, nine, te
 
 
 
+#Verifica se o Jogoador possui uma Quadra
 def verify_four(two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen):
     if len(fourteen) == 4:
         return 14
@@ -107,12 +115,14 @@ def verify_four(two, three, four, five, six, seven, eight, nine, ten, eleven, tw
     else:
         return 0   
     
+#Funcao que inicia uma lista com zeros
 def iniciate_list_zero(number):
     sequence = []
     for i in range(number):
         sequence.append(0)
     return sequence
 
+#Funcao para verificacao de triplas ou duplas na mao do jogador que no caso ira contar
 def counting_double_triple(sequence):
     doubles = 0
     triples = 0
@@ -125,12 +135,14 @@ def counting_double_triple(sequence):
     
     return doubles, triples
 
+#Funcao que verifica se o jogador possui um Full House
 def verify_full_house(doubles, triples):
     if doubles == 1 and triples == 1:
         return True
     else:
         return False
 
+#Funcao que verifica se o jogador possui um Straight
 def verify_straight(frequency):
     count = 0
     for i in frequency:
@@ -143,24 +155,28 @@ def verify_straight(frequency):
             return True
     return False
     
+#Funcao que verifica se o jogador possui uma Tripla
 def verify_triple(triples):
     if triples == 1:
         return True
     else:
         return False
 
+#Funcao que verifica se o jogador possui Dois Pares
 def verify_two_doubles(doubles):
     if doubles == 2:
         return True
     else:
         return False
 
+#Funcao que verifica se o jogador possui um Par
 def verify_double(doubles):
     if doubles == 1:
         return True
     else:
         return False
        
+#Funcao que verifica se o jogador possui um Par ou uma Tripla
 def verify_double_triple(sequence):
     
     
@@ -197,6 +213,7 @@ def verify_double_triple(sequence):
     
     return frequency
 
+#Verifica os pesos da sequencia
 def big_triple_or_pair(sequences):
     if len(sequences) == 0:
         return 0
@@ -210,6 +227,7 @@ def big_triple_or_pair(sequences):
     
     return higher_value 
  
+#Recebe sequencias e retorna o maior valor delas
 def big_sequence(sequences):
     
     bigger_value = 0
@@ -224,6 +242,7 @@ def big_sequence(sequences):
                 bigger_value = sequence[4]
         return bigger_value
 
+#Verifica qual a maior carta na mao do player
 def verify_highest_card(game_cards):
     game_cards = sorted(game_cards, key=lambda card : card.value_getter())
 

@@ -4,10 +4,10 @@ import sys
 
 
 
-class ThreadData :
+class ThreadData : #Classe Thread
     def __init__(self, sock, thread):
-        self.sock = sock
-        self.thread = thread
+        self.sock = sock #Atributo para o socket
+        self.thread = thread #Atributo para a thread
 
 def threadRecv(thread):
     buffer_size = 1024

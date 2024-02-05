@@ -21,10 +21,6 @@ class Jogo:#Classe Jogo
 
     #Retorna uma mensagem que mostrara determinada quantidade de cartas no jogo
     def print_table_cards(self, qtd):
-        #print("\nCARTAS NA MESA:")
-        #for i in range(qtd):
-        #    print(f"{self._table_cards[i].suit_getter()}{self._table_cards[i].value_getter()}  ", end="")
-        #print("\n")
         msg = "\nCARTAS NA MESA:\n=================================================================\n"
         for i in range(qtd):
             msg = msg + f"{self._table_cards[i].suit_getter()}{self._table_cards[i].value_getter()}  "
@@ -32,6 +28,7 @@ class Jogo:#Classe Jogo
         msg = msg + "\n"
         return msg
     
+    #Metodo para distriubuicao de cartas no jogo
     def distribute_cards(self):
         self._deck.shuffle()
         
@@ -39,18 +36,39 @@ class Jogo:#Classe Jogo
             for i in range(2):
                 jogador.cards_push(self._deck.pop())
                 
+    
+    
+    #Getters e Stters para checar as apostas
     def check_bets_getter(self):
         return self._check_bets
     
+    def check_bets_setter(self, value):
+        self._check_bets = value
+    
+    #Getters e setters para o valor atual de aposta na rodada
     def current_value_setter(self, value):
         self._current_value = value
+
+    def current_value_getter(self):
+        return self._current_value
         
+    
+    #Getters e setters para o total apostado
     def total_bets_getter(self):
         return self._total_bets
     
+    def total_bets_setter(self, value):
+        self._total_bets = value
+    
+    #Getters e setters para os jogadores na partida
     def players_getter(self):
         return self._jogadores
+    
+    def players_setter(self, jogadores):
+        self._jogadores = jogadores
 
+    
+    #Metodo para verificar aposta igual a atual
     def verify_equal_all_bets(self):
         for jogador in self._jogadores:
             if jogador.fold_getter() == True:
@@ -59,45 +77,41 @@ class Jogo:#Classe Jogo
                 return False
         return True
     
+    #Metodo para resetar a aposta atual a cada vez que mostar as cartas
     def reset_all_atual_bet(self):
         for jogador in self._jogadores:
             jogador.atual_bet_setter(0)
             
-    def players_setter(self, jogadores):
-        self._jogadores = jogadores
-    
-    def total_bets_setter(self, value):
-        self._total_bets = value
         
+    #Getter para obter as cartas da mesa
     def table_cards_getter(self):
         return self._table_cards
     
+    #Setter para o Deck
     def deck_setter(self, value):
         self._deck = value
-        
-    def current_value_getter(self):
-        return self._current_value
             
+    #Metodo para settar o valor atual de aposta
     def raise_current_value(self, value):
         self._current_value = value
-        
-    def check_bets_setter(self, value):
-        self._check_bets = value
     
+    #Metodo para remover jogadores desistentes
     def remove_folds(self):
         for jogador in self._jogadores:
             if jogador.fold_getter() == True:
                 self._jogadores.pop()
     
+    #Metodo para pegar o nome dos jogadores
     def initial_players(self, qtd, chips):
         for i in range(qtd):   
             name = input(f"Digite o nome do jogador {i + 1}:")
             self._jogadores.append(Jogador(name, chips))
 
+    #Metodo para remocao de um jogador
     def remove_player(self, jogador):
         self._jogadores.remove(jogador)
 
-    
+    #Metodo para adicao de um jogador
     def add_player(self, player):
         self._jogadores.append(player)   
     
@@ -125,6 +139,8 @@ class Jogo:#Classe Jogo
                 if draw == jogador:
                     jogador.draws_setter(jogador.draws_getter() + 1)   
                          
+    
+    #metodo para verificacao das sequencias de poker
     def poker_sequences(self, player_cards):
         
         cards = self._table_cards + player_cards
@@ -281,56 +297,7 @@ class Jogo:#Classe Jogo
             return sequences_weights["Carta mais alta"] * higher_card, "Carta mais alta"
 
 
-    def bet_time(self):     
-        for jogador in self._jogadores:
-            if self.verify_number_valid_players() == False:
-                break
-            
-            if jogador.fold_getter() == True:
-                continue
-            
-            while True:
-                print(f"\nFICHAS: {jogador.chips_getter()}         MAIOR APOSTA DA RODADA: {self._current_value}        BUCKET: {self._total_bets}\n")
-                jogador.print_cards()
-                self.show_player_menu()
-                while True:
-                    player_choice = int(input("Opção:"))
-                    if player_choice > 0 and player_choice < 7:
-                        break
-                    else:
-                        print("Opção Inválida!")
-                        
-                if player_choice == 1:
-                    value = int(input("Valor: "))
-                    if jogador.raise_bet(value, self._current_value) == True:
-                        self._current_value = value
-                        self._total_bets += value
-                        self._check_bets = False
-                        break
-                    else:
-                        print("Acao Invalida")
-                elif player_choice == 2:
-                    if jogador.call(self._current_value) == True:
-                        self._total_bets += self._current_value
-                        self._check_bets = True
-                        break
-                    else:
-                        print("Acao Invalida")
-                elif player_choice == 3:
-                    jogador.fold()
-                    break
-                elif player_choice == 4:
-                    jogador.check()
-                    break
-                elif player_choice == 5:
-                    if jogador.all_in(self._current_value) == True:
-                        self._current_value = jogador.chips_getter()
-                        self._total_bets += self._current_value
-                        jogador.chips_setter(0)
-                        break
-                    else:
-                        print("Acao Invalida")
-
+    #metodo para verificar quem venceu ou os jogadores que empataram
     def victory_verification(self):
 
         players = []
@@ -361,14 +328,7 @@ class Jogo:#Classe Jogo
         
         return winners, victory_count
 
-    
-    def show_menu(self):
-        print("Poker Texas Hold'em")
-        print("1 - Iniciar")
-        print("2 - Sair")
-
-        
-    
+    #metodo do menu do player
     def show_player_menu(self):
         msg = "Ação:\n"
         msg = msg + "1 - Aumentar a aposta\n"
@@ -378,6 +338,7 @@ class Jogo:#Classe Jogo
         msg = msg + "5 - AllIn\n"
         return msg
         
+    #Metodo para restar todos os jogadores para um novo Jogo
     def clear_players(self):
         for jogador in self._jogadores:
             jogador._cards.clear()
@@ -389,6 +350,7 @@ class Jogo:#Classe Jogo
                 jogador.fold_setter(True)
             jogador.sequence_setter("")
     
+    #Verifica desistentes no jogo
     def verify_fold(self):
         active = 0
         for jogador in self._jogadores:
@@ -399,6 +361,7 @@ class Jogo:#Classe Jogo
             return True
 
                 
+    #metodo que verifica a quantidade de players validos no jogo 
     def verify_number_valid_players(self):
         valid_players = 0
         for jogador in self._jogadores:

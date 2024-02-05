@@ -5,9 +5,11 @@ import socket
 import threading
 import time
 
+#Variaveis para numero de Threads e Conexoes
 NUM_THREADS = 30
 NUM_CONECTIONS = 30
 
+#Listas de Sockets e Clients
 sockets_threads_ids = []
 
 clients_section_1 = []
@@ -32,6 +34,7 @@ def send_message_all_except_one(clients, exception, msg):
         if client != exception:
             client.sendall(msg.encode('utf-8'))
             
+#Funcao para uma fila circular no jogo
 def circular_queue(jogo):
     inicio = (jogo.players_getter())[0]
     jogo.add_player(inicio)

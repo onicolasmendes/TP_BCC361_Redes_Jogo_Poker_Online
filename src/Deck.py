@@ -32,5 +32,5 @@ class Deck: #Classe que representa o baralho
     def pop(self): #Metodo para tirar uma carta do baralho
         return self._cards.pop()
     
-    def cards_getter(self):
+    def cards_getter(self): #Metodo para retornar todas as cartas do Deck
         return self._cards
